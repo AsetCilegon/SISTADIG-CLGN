@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>SISTADIG Kota Cilegon - Sistem Informasi Tanah Digital</title>
+    <title>SISTADIG KOTA CILEGON - Sistem Informasi Tanah Digital Kota Cilegon</title>
     
     <!-- CSS Dependencies -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -11,1031 +11,1487 @@
     <link rel="stylesheet" href="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.css" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11/dist/sweetalert2.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
     
     <!-- JS Dependencies -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
 
     <style>
-        :root { 
-            --cilegon-green: #1a5c41; 
-            --cilegon-gold: #d4a017; 
-            --cilegon-dark: #0f3626;
-            --cilegon-light: #e8f5e9;
-        }
-        
-        body { background-color: #f4f6f9; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; font-size: 13px; padding-bottom: 40px;}
-        
-        /* Running Text */
-        .running-text-container {
-            background: var(--cilegon-dark);
-            color: var(--cilegon-gold);
-            padding: 5px 0;
-            font-weight: 600;
-            font-size: 12px;
-            letter-spacing: 1px;
-            border-bottom: 2px solid var(--cilegon-gold);
+        :root {
+            --app-blue: #1e40af;
+            --app-blue-light: #3b82f6;
+            --app-yellow: #facc15;
+            --app-orange: #f97316;
+            --app-red: #ef4444;
+            --app-gray: #64748b;
+            --app-bg: #f1f5f9;
         }
 
-        /* Login Page Style */
-        #loginOverlay {
+        body { 
+            font-family: 'Plus Jakarta Sans', sans-serif; 
+            background-color: var(--app-bg);
+            overflow-x: hidden;
+        }
+
+        /* Sidebar Styling */
+        .sidebar {
+            width: 260px; height: 100vh; position: fixed;
+            background: #0f172a; color: #f8fafc;
+            display: flex; flex-direction: column; z-index: 1000;
+        }
+        .sidebar-header {
+            padding: 24px; text-align: center; border-bottom: 1px solid #1e293b; cursor: pointer;
+        }
+        .nav-menu { flex: 1; padding: 15px 0; overflow-y: auto; }
+        .nav-link {
+            color: #94a3b8; padding: 12px 24px; font-weight: 600;
+            display: flex; align-items: center; gap: 12px;
+            text-decoration: none; border-left: 4px solid transparent; transition: all 0.3s ease;
+        }
+        .nav-link:hover, .nav-link.active { background: #1e293b; color: var(--app-yellow); border-left-color: var(--app-yellow); }
+        .sidebar-footer { padding: 20px; border-top: 1px solid #1e293b; }
+
+        /* Main Content */
+        .main-content { margin-left: 260px; min-height: 100vh; padding: 30px; padding-bottom: 80px; }
+        .card-custom { border: none; border-radius: 16px; box-shadow: 0 4px 10px rgba(0,0,0,0.05); background: white; }
+        
+        /* Specific Colors */
+        .text-blue { color: var(--app-blue); }
+        .text-yellow { color: var(--app-yellow); }
+        .text-orange { color: var(--app-orange); }
+        .bg-orange { background-color: var(--app-orange); color: white; }
+
+        #map, #modal-map { width: 100%; border-radius: 16px; z-index: 1; }
+        #map { height: 500px; }
+        #modal-map { height: 350px; border: 2px solid #e2e8f0; }
+
+        .running-text-container {
+            position: fixed; bottom: 0; left: 260px; right: 0;
+            background: var(--app-red); color: #ffffff; padding: 10px 0;
+            font-weight: 700; letter-spacing: 1px; z-index: 1001; box-shadow: 0 -4px 10px rgba(0,0,0,0.1);
+        }
+
+        .view-section { display: none; }
+        .view-section.active { display: block; animation: fadeIn 0.4s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateY(10px); } to { opacity: 1; transform: translateY(0); } }
+
+        .table-responsive { border-radius: 12px; }
+        .table th { background-color: #f8fafc; font-size: 12px; text-transform: uppercase; color: var(--app-gray); font-weight: 800; white-space: nowrap; border-bottom: 2px solid #e2e8f0;}
+        .table td { vertical-align: middle; font-size: 13px; white-space: nowrap; }
+
+        /* LOGIN SCREEN MODERN */
+        #login-screen {
             position: fixed; top: 0; left: 0; width: 100%; height: 100%;
-            background: linear-gradient(rgba(0,0,0,0.7), rgba(26, 92, 65, 0.8)), url('https://images.unsplash.com/photo-1506146332389-18140dc7b2fb?q=80&w=2070&auto=format&fit=crop') center/cover no-repeat;
+            background: url('https://selatsunda.com/wp-content/uploads/2023/05/WhatsApp-Image-2023-05-02-at-15.03.04.jpeg') no-repeat center center/cover;
             display: flex; align-items: center; justify-content: center; z-index: 9999;
         }
+        .login-overlay {
+            position: absolute; top: 0; left: 0; width: 100%; height: 100%;
+            background: linear-gradient(135deg, rgba(30, 64, 175, 0.85) 0%, rgba(15, 23, 42, 0.95) 100%);
+        }
         .login-card {
-            background: rgba(255, 255, 255, 0.95);
-            padding: 2.5rem; border-radius: 20px; box-shadow: 0 15px 35px rgba(0,0,0,0.5);
-            width: 100%; max-width: 420px; backdrop-filter: blur(10px);
-            border: 2px solid var(--cilegon-gold);
+            position: relative; z-index: 2; width: 420px; max-width: 90%;
+            background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px);
+            border-top: 5px solid var(--app-yellow);
         }
-        
-        /* Dashboard Styles */
-        .navbar { background: var(--cilegon-green); }
-        .navbar-brand img { height: 50px; margin-right: 15px; filter: drop-shadow(0px 2px 4px rgba(0,0,0,0.3)); }
-        .nav-title { line-height: 1.2; }
-        .nav-main-title { font-size: 1.2rem; font-weight: 800; letter-spacing: 1px; color: #fff;}
-        .nav-sub-title { font-size: 0.8rem; font-weight: normal; color: #e0e0e0; }
 
-        /* Summary Cards */
-        .summary-card {
-            border-radius: 15px; border: none; overflow: hidden;
-            box-shadow: 0 4px 15px rgba(0,0,0,0.05); transition: 0.3s;
-        }
-        .summary-card:hover { transform: translateY(-3px); box-shadow: 0 8px 25px rgba(0,0,0,0.1); }
-        .summary-icon { font-size: 2.5rem; opacity: 0.2; position: absolute; right: 20px; bottom: 10px; }
-
-        #map { height: 350px; border-radius: 15px; border: 3px solid #fff; box-shadow: 0 4px 15px rgba(0,0,0,0.1); }
-        .card { border: none; border-radius: 15px; box-shadow: 0 4px 15px rgba(0,0,0,0.05); }
+        .form-switch .form-check-input { width: 2.5em; height: 1.25em; cursor: pointer; }
         
-        .table-container { max-height: 500px; overflow-y: auto; overflow-x: auto; background: white; border-radius: 10px; }
-        .table-custom { min-width: 1800px; font-size: 11px; }
-        .table-custom th { background-color: var(--cilegon-green); color: white; vertical-align: middle; white-space: nowrap;}
-        .table-custom td { vertical-align: middle; }
-        
-        .scan-container { 
-            height: 400px; border: 2px dashed #ccc; border-radius: 15px; 
-            background: #fafafa; display: flex; align-items: center; justify-content: center; 
-            overflow: hidden; position: relative; transition: 0.3s;
-        }
-        .scan-container img { max-width: 100%; max-height: 100%; object-fit: contain; }
-        
-        .form-label { font-weight: 700; font-size: 10px; margin-bottom: 2px; color: var(--cilegon-dark); text-transform: uppercase; }
-        .btn-cilegon { background: var(--cilegon-green); color: white; border-radius: 8px; font-weight: 600;}
-        .btn-cilegon:hover { background: var(--cilegon-dark); color: white; }
-        .btn-gold { background: var(--cilegon-gold); color: #000; border-radius: 8px; font-weight: 600;}
-        .btn-gold:hover { background: #b8860b; color: #fff; }
-        
-        tr.selected { background-color: var(--cilegon-light) !important; border-left: 4px solid var(--cilegon-green); }
-        .badge-sertif { font-size: 9px; padding: 5px 10px; border-radius: 20px; }
-        
-        .custom-popup .leaflet-popup-content-wrapper { border-radius: 10px; }
-        .custom-popup .leaflet-popup-content { margin: 12px; font-size: 12px; }
-
-        .filter-box { background-color: #fff; padding: 15px; border-radius: 12px; box-shadow: 0 2px 10px rgba(0,0,0,0.03); border: 1px solid #eee; }
-
-        /* Footer Clock */
-        .footer-clock {
-            position: fixed; bottom: 0; left: 0; width: 100%;
-            background: var(--cilegon-dark); color: white;
-            padding: 8px 20px; font-size: 12px; font-weight: 600;
-            display: flex; justify-content: space-between; z-index: 1000;
-            border-top: 2px solid var(--cilegon-gold);
-        }
+        /* Scan Preview Area */
+        #preview-scan-img { max-width: 100%; max-height: 70vh; object-fit: contain; }
     </style>
 </head>
 <body>
 
-<!-- LOGIN OVERLAY -->
-<div id="loginOverlay">
-    <div class="login-card text-center">
-        <!-- Menggunakan logo stabil dari server Banten/Kemendagri/Wikipedia alternatif -->
-        <img src="https://upload.wikimedia.org/wikipedia/commons/d/de/Lambang_Kota_Cilegon.png" alt="Logo Pemkot Cilegon" style="height: 90px;" class="mb-3">
-        <h3 class="fw-bold mb-1" style="color: var(--cilegon-green);">SISTADIG KOTA CILEGON</h3>
-        <p class="text-muted small mb-4 fw-bold">Sistem Informasi Tanah Digital<br>Pemerintah Kota Cilegon</p>
-        
-        <div class="text-start mb-3">
-            <label class="form-label">Username</label>
-            <input type="text" id="userLogin" class="form-control" placeholder="Masukkan username">
-        </div>
-        <div class="text-start mb-4">
-            <label class="form-label">Password</label>
-            <input type="password" id="passLogin" class="form-control" placeholder="********">
-        </div>
-        <button onclick="handleLogin()" class="btn btn-cilegon w-100 py-2 shadow-sm mb-3">MASUK KE SISTEM</button>
-        
-        <div class="mt-4 pt-3 border-top">
-            <p class="text-muted fw-bold m-0" style="font-size: 11px; color: var(--cilegon-green) !important;">Bidang Aset Daerah BPKPAD Kota Cilegon</p>
+    <!-- LOGIN SCREEN -->
+    <div id="login-screen">
+        <div class="login-overlay"></div>
+        <div class="card card-custom p-5 login-card shadow-lg">
+            <div class="text-center mb-4">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/d/de/Lambang_Kota_Cilegon.png" alt="Logo Cilegon" width="80" class="mb-3">
+                <h3 class="fw-bold mt-2 text-blue">SISTADIG CILEGON</h3>
+                <p class="text-muted small fw-bold" style="color: var(--app-orange) !important;">Sistem Informasi Tanah Digital Kota Cilegon</p>
+                <div class="badge bg-secondary mb-2">Pemerintah Kota Cilegon</div>
+            </div>
+            <form id="form-login">
+                <div class="mb-3">
+                    <label class="form-label fw-bold small text-secondary">Username</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-primary"><i class="fas fa-user"></i></span>
+                        <input type="text" id="login-user" class="form-control bg-light" placeholder="Masukkan Username" required>
+                    </div>
+                </div>
+                <div class="mb-4">
+                    <label class="form-label fw-bold small text-secondary">Password</label>
+                    <div class="input-group">
+                        <span class="input-group-text bg-light text-primary"><i class="fas fa-lock"></i></span>
+                        <input type="password" id="login-pass" class="form-control bg-light" placeholder="Masukkan Password" required>
+                        <button class="btn btn-outline-secondary bg-light" type="button" onclick="app.togglePassword()">
+                            <i class="fas fa-eye" id="eye-icon"></i>
+                        </button>
+                    </div>
+                </div>
+                <button type="submit" class="btn btn-primary w-100 fw-bold py-2 shadow-sm" style="background-color: var(--app-blue); border:none;">
+                    <i class="fas fa-sign-in-alt me-2"></i> MASUK SISTEM
+                </button>
+            </form>
         </div>
     </div>
-</div>
 
-<!-- MAIN DASHBOARD -->
-<div id="mainContent" style="display:none;">
-    
-    <!-- Running Text -->
-    <div class="running-text-container">
-        <marquee behavior="scroll" direction="left" scrollamount="5">
-            <i class="fas fa-bullhorn me-2"></i> SELAMAT MENGGUNAKAN APLIKASI - TERTIB ADMINISTRASI BARANG MILIK DAERAH PEMERINTAH KOTA CILEGON
-        </marquee>
-    </div>
+    <!-- MAIN APP STRUCTURE -->
+    <div id="app-wrapper" style="display: none;">
+        
+        <!-- SIDEBAR -->
+        <div class="sidebar">
+            <div class="sidebar-header" ondblclick="app.masterLogin()" title="Klik 2x untuk Master Setup">
+                <img src="https://upload.wikimedia.org/wikipedia/commons/d/de/Lambang_Kota_Cilegon.png" width="55" class="mb-2">
+                <h5 class="fw-bold mb-0 text-white">SISTADIG</h5>
+                <span class="badge mt-2" style="background-color: var(--app-orange); color: white;">Daftar Barang Tanah</span>
+            </div>
+            
+            <div class="nav-menu">
+                <a href="#" onclick="ui.navigate('dashboard')" class="nav-link active" data-page="dashboard">
+                    <i class="fas fa-chart-pie w-20px"></i> Dashboard
+                </a>
+                <a href="#" onclick="ui.navigate('data-aset')" class="nav-link" data-page="data-aset" id="nav-data-aset">
+                    <i class="fas fa-database w-20px"></i> Data Tanah (KIB A)
+                </a>
+                <a href="#" onclick="ui.navigate('peta')" class="nav-link" data-page="peta">
+                    <i class="fas fa-satellite w-20px"></i> Peta Satelit & BHUMI
+                </a>
+                
+                <div id="menu-admin" style="display: none;">
+                    <div class="px-4 mt-4 mb-2 text-xs fw-bold text-uppercase" style="font-size: 11px; color: var(--app-gray);">Administrator</div>
+                    <a href="#" onclick="ui.navigate('manajemen-akun')" class="nav-link" data-page="manajemen-akun">
+                        <i class="fas fa-users-cog w-20px"></i> Manajemen Akun
+                    </a>
+                </div>
 
-    <!-- Navbar -->
-    <nav class="navbar navbar-dark p-2 shadow">
-        <div class="container-fluid">
-            <div class="navbar-brand fw-bold d-flex align-items-center">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/d/de/Lambang_Kota_Cilegon.png" alt="Logo Cilegon">
-                <div class="nav-title">
-                    <div class="nav-main-title">SISTADIG KOTA CILEGON</div>
-                    <div class="nav-sub-title">Sistem Informasi Tanah Digital Pemerintah Kota Cilegon</div>
+                <div id="menu-master" style="display: none;">
+                    <div class="px-4 mt-4 mb-2 text-xs fw-bold text-warning text-uppercase" style="font-size: 11px;">Master Setup</div>
+                    <a href="#" onclick="ui.navigate('master-data')" class="nav-link text-warning" data-page="master-data">
+                        <i class="fas fa-cogs w-20px"></i> Data Referensi
+                    </a>
                 </div>
             </div>
-            <div class="d-flex gap-2 align-items-center">
-                <span class="text-white me-3 small fw-bold" id="userDisplay"></span>
-                <button class="btn btn-outline-light btn-sm" onclick="downloadTemplate()"><i class="fas fa-file-excel"></i> Template</button>
-                <label class="btn btn-light btn-sm mb-0 p-1 px-2" id="btnImport">
-                    <i class="fas fa-file-import"></i> Import <input type="file" id="importExcel" hidden accept=".xlsx, .xls" onchange="handleImport(this)">
-                </label>
-                <button class="btn btn-gold btn-sm" onclick="exportKeExcel()"><i class="fas fa-file-export"></i> Export</button>
-                <button class="btn btn-primary btn-sm" id="btnKelolaUser" onclick="bukaModalUser()" style="display:none;"><i class="fas fa-users-cog"></i> Akun</button>
-                <button class="btn btn-danger btn-sm" onclick="handleLogout()"><i class="fas fa-sign-out-alt"></i> Keluar</button>
-            </div>
-        </div>
-    </nav>
 
-    <div class="container-fluid mt-3">
-        <!-- Summary Cards -->
-        <div class="row g-3 mb-3">
-            <div class="col-md-6">
-                <div class="summary-card card bg-white border-start border-5 border-success p-3 position-relative">
-                    <div class="text-muted fw-bold small text-uppercase">Total Bidang Tanah</div>
-                    <h3 class="fw-bold text-success mb-0" id="totAset">0 <span class="fs-6 text-muted">Bidang</span></h3>
-                    <i class="fas fa-map-marked-alt summary-icon text-success"></i>
+            <div class="sidebar-footer">
+                <div class="d-flex align-items-center gap-3 mb-3">
+                    <div class="stat-icon text-white fw-bold" style="background-color: var(--app-blue); width: 40px; height: 40px; font-size: 16px; border-radius: 50%;" id="user-initial">A</div>
+                    <div class="overflow-hidden">
+                        <div class="fw-bold text-truncate text-white" id="user-name">Admin</div>
+                        <div class="text-warning small text-truncate fw-bold" id="user-opd" style="font-size: 11px;">BPKPAD</div>
+                    </div>
                 </div>
-            </div>
-            <div class="col-md-6">
-                <div class="summary-card card bg-white border-start border-5 border-warning p-3 position-relative">
-                    <div class="text-muted fw-bold small text-uppercase">Total Nilai Perolehan</div>
-                    <h3 class="fw-bold text-warning mb-0" id="totNilai">Rp 0</h3>
-                    <i class="fas fa-coins summary-icon text-warning"></i>
-                </div>
+                <button onclick="app.logout()" class="btn btn-outline-danger btn-sm w-100 fw-bold border-0 bg-danger text-white">Keluar Sistem</button>
             </div>
         </div>
 
-        <div class="row g-3">
-            <!-- FORM INPUT ASET -->
-            <div class="col-lg-3" id="panelForm">
-                <div class="card p-3 shadow-sm border-0">
-                    <h6 class="fw-bold text-success border-bottom pb-2 mb-3" id="formTitle">
-                        <i class="fas fa-plus-circle me-2"></i>INPUT DATA ASET
-                    </h6>
-                    <input type="hidden" id="editIndex" value="-1">
-                    
-                    <div class="row g-1 mb-2">
-                        <div class="col-5">
-                            <label class="form-label">No. Register</label>
-                            <input type="text" id="inpRegister" class="form-control form-control-sm" placeholder="Contoh: 0001">
-                        </div>
-                        <div class="col-7">
-                            <label class="form-label">OPD / Pengguna</label>
-                            <input type="text" id="inpOpd" class="form-control form-control-sm" placeholder="Contoh: Dinas Kesehatan">
-                        </div>
-                    </div>
-                    
-                    <div class="mb-2">
-                        <label class="form-label">Nama Umum Barang</label>
-                        <input type="text" id="inpNamaUmum" class="form-control form-control-sm" placeholder="Tanah Bangunan Gedung">
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">Nama Barang Spesifik</label>
-                        <input type="text" id="inpNama" class="form-control form-control-sm" placeholder="Puskesmas Cibeber">
-                    </div>
-                    <div class="row g-1 mb-2">
-                        <div class="col-6">
-                            <label class="form-label">Status Sertifikat</label>
-                            <select id="inpStatusSer" class="form-select form-select-sm" onchange="toggleSertifikat()">
-                                <option value="sudah">Bersertifikat</option>
-                                <option value="belum">Belum</option>
-                            </select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Tgl Sertifikat</label>
-                            <input type="date" id="inpTglSer" class="form-control form-control-sm">
-                        </div>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">No. Sertifikat</label>
-                        <input type="text" id="inpNo" class="form-control form-control-sm">
-                    </div>
-                    <div class="row g-1 mb-2">
-                        <div class="col-6">
-                            <label class="form-label">Kecamatan</label>
-                            <select id="inpKec" class="form-select form-select-sm" onchange="updateKelurahan()"></select>
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Kelurahan</label>
-                            <select id="inpKel" class="form-select form-select-sm"></select>
-                        </div>
-                    </div>
-                    <div class="row g-1 mb-2">
-                        <div class="col-6">
-                            <label class="form-label">Luas (m²)</label>
-                            <input type="text" id="inpLuas" class="form-control form-control-sm" onkeyup="formatAngka(this)">
-                        </div>
-                        <div class="col-6">
-                            <label class="form-label">Tahun Perolehan</label>
-                            <input type="number" id="inpTahun" class="form-control form-control-sm" placeholder="2024">
-                        </div>
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">Harga Perolehan (Rp)</label>
-                        <input type="text" id="inpHarga" class="form-control form-control-sm" onkeyup="formatAngka(this)">
-                    </div>
-                    <div class="mb-2">
-                        <label class="form-label">Titik Koordinat (Lat, Lng)</label>
-                        <div class="input-group input-group-sm">
-                            <input type="text" id="inpKoordinat" class="form-control" placeholder="-6.01, 106.04">
-                            <button class="btn btn-outline-secondary" onclick="ambilDariPeta()"><i class="fas fa-map-marker-alt"></i></button>
-                        </div>
-                    </div>
-                    <div class="mb-3" id="boxUpload">
-                        <label class="form-label">Update Scan Dokumen</label>
-                        <input type="file" id="inpFile" class="form-control form-control-sm" accept="image/*" onchange="previewScan(this)">
-                    </div>
-                    
-                    <div class="d-grid gap-2" id="panelTombolForm">
-                        <button onclick="simpanData()" class="btn btn-cilegon btn-sm shadow-sm"><i class="fas fa-save me-1"></i> SIMPAN DATA</button>
-                        <button onclick="resetForm()" class="btn btn-light btn-sm border"><i class="fas fa-undo me-1"></i> BATAL</button>
-                    </div>
-                </div>
-            </div>
-
-            <!-- MAIN DATA TABLE & MAP -->
-            <div class="col-lg-6" id="panelTabel">
-                <div class="card p-2 mb-3"><div id="map"></div></div>
-                <div class="card p-3">
-                    <div class="d-flex justify-content-between align-items-center mb-2">
-                        <h6 class="fw-bold m-0" style="color: var(--cilegon-dark);"><i class="fas fa-table me-2"></i>DATA TANAH (KIB A)</h6>
-                    </div>
-                    
-                    <!-- AREA FILTER DATA -->
-                    <div class="filter-box mb-3">
-                        <div class="row g-2 align-items-end">
-                            <div class="col-md-3">
-                                <label class="form-label">Filter OPD</label>
-                                <select id="filterOpd" class="form-select form-select-sm" onchange="applyFilters()">
-                                    <option value="">Semua OPD</option>
-                                </select>
-                            </div>
-                            <div class="col-md-2">
-                                <label class="form-label">Per Tahun</label>
-                                <input type="number" id="filterTahun" class="form-control form-control-sm" placeholder="Thn" onkeyup="applyFilters()" onchange="applyFilters()">
-                            </div>
-                            <div class="col-md-3">
-                                <label class="form-label">Sampai Tahun</label>
-                                <input type="number" id="filterSampaiTahun" class="form-control form-control-sm" placeholder="Thn" onkeyup="applyFilters()" onchange="applyFilters()">
-                            </div>
-                            <div class="col-md-4">
-                                <label class="form-label">Pencarian Bebas</label>
-                                <div class="input-group input-group-sm">
-                                    <span class="input-group-text bg-light"><i class="fas fa-search"></i></span>
-                                    <input type="text" id="cariData" class="form-control" placeholder="Cari data..." onkeyup="applyFilters()">
+        <!-- MAIN CONTENT -->
+        <div class="main-content">
+            
+            <!-- VIEW: DASHBOARD -->
+            <div id="view-dashboard" class="view-section active">
+                <h3 class="fw-bold mb-4 text-blue">Dashboard & Statistik</h3>
+                
+                <div class="row g-4 mb-4">
+                    <div class="col-md-4">
+                        <div class="card card-custom p-4 border-bottom border-primary border-4 h-100" style="border-color: var(--app-blue) !important;">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <p class="text-muted fw-bold mb-1 small uppercase">Total Bidang Tanah</p>
+                                    <h2 class="fw-bold mb-0 text-blue" id="dash-total-bidang">0</h2>
                                 </div>
+                                <div class="stat-icon bg-primary bg-opacity-10 text-primary"><i class="fas fa-layer-group"></i></div>
+                            </div>
+                            <div class="mt-auto d-flex justify-content-between small fw-bold">
+                                <span class="text-success"><i class="fas fa-check-circle"></i> Sertifikat: <span id="dash-bidang-sudah">0</span></span>
+                                <span class="text-danger"><i class="fas fa-times-circle"></i> Belum: <span id="dash-bidang-belum">0</span></span>
                             </div>
                         </div>
                     </div>
+                    <div class="col-md-4">
+                        <div class="card card-custom p-4 border-bottom border-warning border-4 h-100" style="border-color: var(--app-yellow) !important;">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <p class="text-muted fw-bold mb-1 small uppercase">Total Luas Tanah (m²)</p>
+                                    <h2 class="fw-bold mb-0 text-warning" id="dash-total-luas">0</h2>
+                                </div>
+                                <div class="stat-icon bg-warning bg-opacity-10 text-warning"><i class="fas fa-expand"></i></div>
+                            </div>
+                            <div class="mt-auto d-flex justify-content-between small fw-bold">
+                                <span class="text-success">Sertifikat: <span id="dash-luas-sudah">0</span></span>
+                                <span class="text-danger">Belum: <span id="dash-luas-belum">0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="card card-custom p-4 border-bottom border-danger border-4 h-100" style="border-color: var(--app-red) !important;">
+                            <div class="d-flex justify-content-between align-items-start mb-3">
+                                <div>
+                                    <p class="text-muted fw-bold mb-1 small uppercase">Total Nilai Perolehan</p>
+                                    <h3 class="fw-bold mb-0 text-danger" id="dash-total-nilai">Rp 0</h3>
+                                </div>
+                                <div class="stat-icon bg-danger bg-opacity-10 text-danger"><i class="fas fa-money-bill-wave"></i></div>
+                            </div>
+                             <div class="mt-auto d-flex justify-content-between small fw-bold">
+                                <span class="text-success">Sertifikat: <span id="dash-nilai-sudah">Rp 0</span></span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
 
-                    <!-- TABEL DATA LENGKAP -->
-                    <div class="table-responsive table-container border shadow-sm">
-                        <table class="table table-hover table-sm table-custom align-middle mb-0" id="dataTable">
-                            <thead class="text-center sticky-top shadow-sm">
+                <div class="card card-custom p-4">
+                    <h5 class="fw-bold mb-4 text-secondary">Rekapitulasi Aset Per OPD Pengguna</h5>
+                    <div class="table-responsive">
+                        <table class="table table-hover align-middle">
+                            <thead>
                                 <tr>
-                                    <th width="40">No</th>
-                                    <th>Register</th>
-                                    <th>OPD/Pengguna</th>
-                                    <th>Nama Umum</th>
-                                    <th>Nama Spesifik</th>
-                                    <th>Status</th>
-                                    <th>Tgl Sertifikat</th>
-                                    <th>No. Sertifikat</th>
-                                    <th>Kecamatan</th>
-                                    <th>Kelurahan</th>
-                                    <th>Luas (m²)</th>
-                                    <th>Tahun</th>
-                                    <th>Harga (Rp)</th>
-                                    <th>Koordinat</th>
-                                    <th width="80" class="col-aksi">Aksi</th>
+                                    <th>Kode OPD</th>
+                                    <th>OPD Pengguna</th>
+                                    <th class="text-center">Total Bidang</th>
+                                    <th class="text-center text-success"><i class="fas fa-check-circle"></i> Bersertifikat</th>
+                                    <th class="text-center text-danger"><i class="fas fa-times-circle"></i> Belum</th>
+                                    <th class="text-end">Total Nilai Perolehan (Rp)</th>
                                 </tr>
                             </thead>
-                            <tbody id="isiTabel"></tbody>
+                            <tbody id="dash-table-opd"></tbody>
                         </table>
                     </div>
                 </div>
             </div>
 
-            <!-- SCAN VIEWER -->
-            <div class="col-lg-3">
-                <div class="sticky-top" style="top: 20px;">
-                    <div class="card p-2 mb-3">
-                        <h6 class="fw-bold text-center mt-2 mb-2 small text-uppercase" style="color:var(--cilegon-dark);">Pratinjau Dokumen</h6>
-                        <div class="scan-container shadow-sm mb-2" id="scanViewer">
-                            <div class="text-center p-4">
-                                <i class="fas fa-file-image fa-3x text-secondary mb-2 opacity-50"></i>
-                                <p class="text-muted mb-0 small">Dokumen tidak tersedia</p>
+            <!-- VIEW: DATA KIB A -->
+            <div id="view-data-aset" class="view-section">
+                <div class="d-flex flex-column flex-md-row justify-content-between align-items-md-center mb-4 gap-3">
+                    <h3 class="fw-bold mb-0 text-blue">Daftar Barang Tanah</h3>
+                    <div class="d-flex gap-2 flex-wrap">
+                        <button class="btn btn-outline-secondary fw-bold" onclick="kib.downloadTemplate()" id="btn-template" style="display:none;">
+                            <i class="fas fa-download me-1"></i> Template Excel
+                        </button>
+                        <label class="btn bg-orange fw-bold cursor-pointer m-0" id="btn-import" style="display:none;">
+                            <i class="fas fa-file-import me-1"></i> Import Excel
+                            <input type="file" hidden accept=".xlsx, .xls, .csv" onchange="kib.importExcel(event)">
+                        </label>
+                        <button class="btn btn-success fw-bold" onclick="kib.exportExcel()" id="btn-export" style="display:none;">
+                            <i class="fas fa-file-excel me-1"></i> Export Excel
+                        </button>
+                        <button class="btn btn-primary fw-bold" style="background-color: var(--app-blue);" onclick="ui.modalKib('tambah')" id="btn-tambah" style="display:none;">
+                            <i class="fas fa-plus me-1"></i> Tambah Data
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card card-custom p-3 mb-4 border-start border-warning border-5">
+                    <div class="row g-2">
+                        <div class="col-md-4">
+                            <input type="text" id="filter-search" class="form-control" placeholder="Cari Nama, Letak, OPD..." onkeyup="kib.render()">
+                        </div>
+                        <div class="col-md-3">
+                            <select id="filter-opd" class="form-select" onchange="kib.render()">
+                                <option value="">Semua OPD</option>
+                            </select>
+                        </div>
+                        <div class="col-md-3">
+                            <select id="filter-status" class="form-select" onchange="kib.render()">
+                                <option value="">Semua Status Sertifikat</option>
+                                <option value="sudah">Sudah Bersertifikat</option>
+                                <option value="belum">Belum Bersertifikat</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="card card-custom overflow-hidden shadow-sm">
+                    <div class="table-responsive">
+                        <table class="table table-hover mb-0 align-middle">
+                            <thead style="background-color: #f8fafc;">
+                                <tr>
+                                    <th class="ps-3">No</th>
+                                    <th>Kode OPD</th>
+                                    <th>OPD Pengguna</th>
+                                    <th>No Register</th>
+                                    <th>Nama Barang</th>
+                                    <th>Letak / Lokasi</th>
+                                    <th>Wilayah (Kab/Kec/Kel)</th>
+                                    <th>Penggunaan & Asal</th>
+                                    <th class="text-end">Luas (m²)</th>
+                                    <th class="text-end">Nilai (Rp)</th>
+                                    <th>Status & Tgl Sertifikat</th>
+                                    <th class="text-center">Dokumen Scan</th>
+                                    <th class="text-center pe-3">Aksi</th>
+                                </tr>
+                            </thead>
+                            <tbody id="table-kib-body"></tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <!-- VIEW: PETA SATELIT -->
+            <div id="view-peta" class="view-section">
+                <h3 class="fw-bold mb-4 text-blue">Peta Satelit Sebaran Aset Tanah</h3>
+                <div class="card card-custom p-2 mb-4">
+                    <div id="map"></div>
+                    <div class="p-3 text-muted small border-top mt-2">
+                        <i class="fas fa-info-circle text-orange me-1"></i> Klik penanda pada peta modern untuk melihat detail aset tanah secara interaktif.
+                    </div>
+                </div>
+
+                <h3 class="fw-bold mb-4 text-orange"><i class="fas fa-map"></i> Peta BHUMI ATR/BPN</h3>
+                <div class="card card-custom p-2 bg-light border">
+                    <iframe src="https://bhumi.atrbpn.go.id/peta" width="100%" height="650" style="border:none; border-radius: 12px;"></iframe>
+                </div>
+            </div>
+
+            <!-- VIEW: MANAJEMEN AKUN -->
+            <div id="view-manajemen-akun" class="view-section">
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h3 class="fw-bold mb-0 text-blue">Manajemen Akun Pengguna</h3>
+                    <div class="d-flex gap-2">
+                        <button class="btn btn-primary fw-bold" style="background-color: var(--app-blue);" onclick="ui.modalAkun('tambah')">
+                            <i class="fas fa-plus me-1"></i> Tambah Akun
+                        </button>
+                    </div>
+                </div>
+
+                <div class="card card-custom overflow-hidden shadow-sm">
+                    <table class="table table-hover mb-0 align-middle">
+                        <thead>
+                            <tr>
+                                <th class="ps-3">Username</th>
+                                <th>Role</th>
+                                <th>Kode OPD</th>
+                                <th>Nama OPD</th>
+                                <th>Hak Akses (Khusus OPD)</th>
+                                <th class="text-center pe-3">Aksi</th>
+                            </tr>
+                        </thead>
+                        <tbody id="table-akun-body"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- VIEW: MASTER DATA (HIDDEN) -->
+            <div id="view-master-data" class="view-section">
+                <h3 class="fw-bold mb-4 text-warning"><i class="fas fa-cogs text-orange"></i> Master Setup Data Referensi</h3>
+                
+                <div class="row g-4">
+                    <div class="col-md-6">
+                        <div class="card card-custom p-4 h-100 border-top border-4" style="border-color: var(--app-blue) !important;">
+                            <h5 class="fw-bold text-blue">Import Daftar OPD & UPB</h5>
+                            <p class="small text-muted mb-4">Upload file excel untuk memperbarui daftar dropdown pilihan OPD Pengguna.</p>
+                            <div class="mt-auto">
+                                <button class="btn btn-outline-secondary btn-sm mb-3" onclick="master.downloadTemplateOPD()">
+                                    <i class="fas fa-download"></i> Template Excel OPD
+                                </button>
+                                <label class="btn btn-primary w-100 fw-bold cursor-pointer" style="background-color: var(--app-blue);">
+                                    <i class="fas fa-upload me-2"></i> Import File OPD (.xlsx/.csv)
+                                    <input type="file" hidden accept=".xlsx, .xls, .csv" onchange="master.importOPD(event)">
+                                </label>
                             </div>
                         </div>
                     </div>
-                    <div class="card p-3 border-success shadow-sm" style="background-color: var(--cilegon-light);">
-                        <h6 class="fw-bold text-success mb-2 small border-bottom border-success pb-2"><i class="fas fa-info-circle me-1"></i>DETAIL INFORMASI</h6>
-                        <div id="infoTerpilih" class="small text-dark" style="line-height: 1.6;">Silakan klik baris tabel untuk melihat detail.</div>
+                    <div class="col-md-6">
+                        <div class="card card-custom p-4 h-100 border-top border-warning border-4">
+                            <h5 class="fw-bold text-orange">Import Wilayah Sertifikat</h5>
+                            <p class="small text-muted mb-4">Upload file excel untuk memperbarui struktur relasi Kota/Kabupaten > Kecamatan > Kelurahan.</p>
+                            <div class="mt-auto">
+                                <button class="btn btn-outline-secondary btn-sm mb-3" onclick="master.downloadTemplateWilayah()">
+                                    <i class="fas fa-download"></i> Template Excel Wilayah
+                                </button>
+                                <label class="btn w-100 fw-bold cursor-pointer" style="background-color: var(--app-orange); color: white;">
+                                    <i class="fas fa-upload me-2"></i> Import File Wilayah (.xlsx/.csv)
+                                    <input type="file" hidden accept=".xlsx, .xls, .csv" onchange="master.importWilayah(event)">
+                                </label>
+                            </div>
+                        </div>
                     </div>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- RUNNING TEXT -->
+        <div class="running-text-container">
+            <marquee scrollamount="8">
+                SELAMAT MENGGUNAKAN APLIKASI - TERTIB ADMINISTRASI BARANG MILIK DAERAH PEMERINTAH KOTA CILEGON 
+            </marquee>
+        </div>
+    </div>
+
+    <!-- MODAL KIB A -->
+    <div class="modal fade" id="modal-kib" tabindex="-1" data-bs-backdrop="static">
+        <div class="modal-dialog modal-xl modal-dialog-centered modal-dialog-scrollable">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-0 py-3" style="background-color: var(--app-blue); color: white;">
+                    <h5 class="modal-title fw-bold" id="modal-kib-title">Form Daftar Barang tanah</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <form id="form-kib">
+                        <input type="hidden" id="kib-id">
+                        
+                        <div class="row g-4">
+                            <!-- Kolom Kiri: Form Input -->
+                            <div class="col-lg-7">
+                                <div class="row g-3">
+                                    <div class="col-12"><h6 class="fw-bold text-orange mb-0 border-bottom border-warning pb-2"><i class="fas fa-building me-1"></i> 1. Identitas & OPD</h6></div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">OPD Pengguna</label>
+                                        <select id="kib-opd" class="form-select bg-white border-secondary" onchange="kib.autoFillKodeOPD()" required></select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">Kode OPD</label>
+                                        <input type="text" id="kib-kodeopd" class="form-control bg-light" readonly required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">No Register</label>
+                                        <input type="text" id="kib-register" class="form-control bg-white border-secondary" required>
+                                    </div>
+
+                                    <div class="col-12 mt-4"><h6 class="fw-bold text-orange mb-0 border-bottom border-warning pb-2"><i class="fas fa-info-circle me-1"></i> 2. Data Barang & Lokasi</h6></div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-secondary">Nama Barang Umum</label>
+                                        <input type="text" id="kib-namaumum" class="form-control bg-white border-secondary">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-secondary">Nama Barang Spesifik</label>
+                                        <input type="text" id="kib-namaspesifik" class="form-control bg-white border-secondary" required>
+                                    </div>
+                                    <div class="col-md-12">
+                                        <label class="form-label small fw-bold text-secondary">Letak / Lokasi</label>
+                                        <textarea id="kib-letak" class="form-control bg-white border-secondary" rows="2" placeholder="Detail jalan, rt/rw, dsb." required></textarea>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">Kota/Kabupaten</label>
+                                        <select id="kib-kota" class="form-select bg-white border-secondary" onchange="geo.loadKec(this.value)" required></select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">Kecamatan</label>
+                                        <select id="kib-kec" class="form-select bg-white border-secondary" onchange="geo.loadKel(this.value)" required></select>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">Kelurahan/Desa</label>
+                                        <select id="kib-kel" class="form-select bg-white border-secondary" required></select>
+                                    </div>
+
+                                    <div class="col-12 mt-4"><h6 class="fw-bold text-orange mb-0 border-bottom border-warning pb-2"><i class="fas fa-file-contract me-1"></i> 3. Sertifikat, Asal Usul & Perolehan</h6></div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">Penggunaan Tanah</label>
+                                        <input type="text" id="kib-penggunaan" class="form-control bg-white border-secondary" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">Asal Usul Tanah</label>
+                                        <input type="text" id="kib-asal" class="form-control bg-white border-secondary" placeholder="Hibah, Pembelian, dll" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">Luas (m²)</label>
+                                        <input type="number" step="any" id="kib-luas" class="form-control bg-white border-secondary" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">Tahun Perolehan</label>
+                                        <input type="number" id="kib-tahun" class="form-control bg-white border-secondary">
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">Nilai Perolehan (Rp)</label>
+                                        <input type="number" id="kib-harga" class="form-control bg-white border-secondary" required>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <label class="form-label small fw-bold text-secondary">Status Sertifikat</label>
+                                        <select id="kib-status" class="form-select bg-white border-secondary fw-bold text-danger" onchange="this.className = this.value === 'sudah' ? 'form-select bg-white border-success fw-bold text-success' : 'form-select bg-white border-danger fw-bold text-danger'">
+                                            <option value="belum">Belum Bersertifikat</option>
+                                            <option value="sudah">Sudah Bersertifikat</option>
+                                        </select>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-secondary">Tgl Sertifikat</label>
+                                        <input type="date" id="kib-tglsertifikat" class="form-control bg-white border-secondary">
+                                    </div>
+                                    <div class="col-md-6">
+                                        <label class="form-label small fw-bold text-secondary">No Sertifikat</label>
+                                        <input type="text" id="kib-nosertifikat" class="form-control bg-white border-secondary" placeholder="Bila Ada">
+                                    </div>
+                                    
+                                    <!-- Upload Modul Scan -->
+                                    <div class="col-12 mt-2">
+                                        <div class="p-3 bg-white border border-info rounded">
+                                            <label class="form-label small fw-bold text-info"><i class="fas fa-file-upload"></i> Upload Scan Dokumen/Sertifikat (Opsional)</label>
+                                            <input type="file" id="kib-scan" class="form-control form-control-sm mb-1" accept="image/jpeg, image/png, application/pdf">
+                                            <small class="text-muted" style="font-size: 10px;">Format: JPG, PNG, PDF (Maks. 1MB agar ringan).</small>
+                                            <input type="hidden" id="kib-scan-data"> <!-- Hidden field untuk menyimpan base64 saat edit -->
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Kolom Kanan: Peta Modern Terintegrasi -->
+                            <div class="col-lg-5">
+                                <div class="bg-white p-3 rounded-3 shadow-sm h-100 border border-primary">
+                                    <h6 class="fw-bold text-primary mb-3"><i class="fas fa-map-marker-alt"></i> Penentuan Titik Koordinat</h6>
+                                    <p class="small text-muted mb-2">Cari lokasi atau klik langsung pada peta satelit untuk menetapkan koordinat aset.</p>
+                                    
+                                    <div id="modal-map" class="mb-3 rounded"></div>
+                                    
+                                    <div class="row g-2">
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold">Latitude</label>
+                                            <input type="text" id="kib-lat" class="form-control form-control-sm bg-light" readonly>
+                                        </div>
+                                        <div class="col-6">
+                                            <label class="form-label small fw-bold">Longitude</label>
+                                            <input type="text" id="kib-lng" class="form-control form-control-sm bg-light" readonly>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4 text-end border-top pt-3">
+                            <button type="button" class="btn btn-secondary px-4 me-2 fw-bold" data-bs-dismiss="modal">Batal</button>
+                            <button type="submit" class="btn px-5 fw-bold text-white shadow" style="background-color: var(--app-blue);" id="btn-save-kib">
+                                <i class="fas fa-save me-1"></i> Simpan Data Tanah
+                            </button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Modal Kelola User -->
-<div class="modal fade" id="modalUser" tabindex="-1">
-    <div class="modal-dialog modal-lg">
-        <div class="modal-content">
-            <div class="modal-header bg-success text-white">
-                <h5 class="modal-title"><i class="fas fa-users-cog me-2"></i>Manajemen Akun Pengguna</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
-            </div>
-            <div class="modal-body bg-light">
-                <div class="row g-3">
-                    <div class="col-md-4">
-                        <div class="card p-3 shadow-sm">
-                            <h6 class="fw-bold mb-3 border-bottom pb-2">Form Akun</h6>
-                            <input type="hidden" id="userIdx" value="-1">
-                            <div class="mb-2">
-                                <label class="form-label">Username</label>
-                                <input type="text" id="uName" class="form-control form-control-sm">
-                            </div>
-                            <div class="mb-3">
-                                <label class="form-label">Password</label>
-                                <input type="text" id="uPass" class="form-control form-control-sm">
-                            </div>
-                            <label class="form-label">Hak Akses</label>
-                            <div class="border p-2 rounded mb-3 bg-white">
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="chkLihat" checked disabled>
-                                    <label class="form-check-label small">Lihat Data (Default)</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="chkTambah">
-                                    <label class="form-check-label small">Tambah Data</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="chkEdit">
-                                    <label class="form-check-label small">Edit Data</label>
-                                </div>
-                                <div class="form-check">
-                                    <input class="form-check-input" type="checkbox" id="chkHapus">
-                                    <label class="form-check-label small">Hapus Data</label>
-                                </div>
-                            </div>
-                            <button class="btn btn-success btn-sm w-100 mb-2" onclick="simpanUser()">Simpan Akun</button>
-                            <button class="btn btn-outline-secondary btn-sm w-100" onclick="resetFormUser()">Batal</button>
+    <!-- MODAL AKUN -->
+    <div class="modal fade" id="modal-akun" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header py-3 border-0" style="background-color: var(--app-blue); color: white;">
+                    <h5 class="modal-title fw-bold" id="modal-akun-title">Form Akun</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-4 bg-light">
+                    <form id="form-akun">
+                        <input type="hidden" id="akun-id">
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">Role Akun</label>
+                            <select id="akun-role" class="form-select border-secondary" onchange="akun.toggleForm(this.value)">
+                                <option value="OPD Pengguna">OPD Pengguna</option>
+                                <option value="Admin">Admin / BPKPAD</option>
+                            </select>
                         </div>
-                    </div>
-                    <div class="col-md-8">
-                        <div class="card p-3 shadow-sm h-100">
-                            <table class="table table-sm table-bordered table-hover text-center align-middle" style="font-size:11px;">
-                                <thead class="table-success">
-                                    <tr>
-                                        <th>Username</th><th>Password</th><th>Hak Akses</th><th>Aksi</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="tabelUsers"></tbody>
-                            </table>
+                        <div class="mb-3 opd-field">
+                            <label class="form-label small fw-bold text-secondary">Pilih OPD Pengguna</label>
+                            <select id="akun-opd-select" class="form-select border-secondary" onchange="akun.autoFillOpd(this)"></select>
+                            <input type="hidden" id="akun-kodeopd">
+                            <input type="hidden" id="akun-namaopd">
                         </div>
-                    </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">Username</label>
+                            <input type="text" id="akun-username" class="form-control border-secondary" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label small fw-bold text-secondary">Password</label>
+                            <input type="text" id="akun-password" class="form-control border-secondary" required>
+                        </div>
+                        
+                        <!-- Izin Akses -->
+                        <div class="mb-4 opd-field p-3 bg-white rounded border border-warning">
+                            <label class="form-label fw-bold text-orange mb-3"><i class="fas fa-shield-alt"></i> Hak Akses Modul (Permissions)</label>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input bg-secondary border-0" type="checkbox" id="perm-lihat" checked disabled>
+                                <label class="form-check-label small fw-bold">Melihat Data (Wajib)</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input border-primary" type="checkbox" id="perm-tambah">
+                                <label class="form-check-label small fw-bold text-primary">Tambah Data</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input border-warning" type="checkbox" id="perm-edit">
+                                <label class="form-check-label small fw-bold text-warning">Edit Data</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input border-danger" type="checkbox" id="perm-hapus">
+                                <label class="form-check-label small fw-bold text-danger">Menghapus Data</label>
+                            </div>
+                            <div class="form-check form-switch mb-2">
+                                <input class="form-check-input border-info" type="checkbox" id="perm-cetak">
+                                <label class="form-check-label small fw-bold text-info">Mencetak / Export</label>
+                            </div>
+                            <div class="form-check form-switch pt-2 border-top">
+                                <input class="form-check-input" style="background-color: var(--app-orange); border:none;" type="checkbox" id="perm-import">
+                                <label class="form-check-label small fw-bold text-orange">Import Data & Template Excel</label>
+                            </div>
+                        </div>
+
+                        <div class="text-end">
+                            <button type="submit" class="btn w-100 fw-bold text-white shadow" style="background-color: var(--app-blue);">Simpan Akun</button>
+                        </div>
+                    </form>
                 </div>
             </div>
         </div>
     </div>
-</div>
 
-<!-- Footer Live Clock -->
-<div class="footer-clock">
-    <div>SISTADIG KOTA CILEGON &copy; Bidang Aset Daerah BPKPAD Kota Cilegon</div>
-    <div id="liveClock"><i class="far fa-clock me-1"></i> Memuat waktu...</div>
-</div>
+    <!-- MODAL PREVIEW SCAN -->
+    <div class="modal fade" id="modal-scan" tabindex="-1">
+        <div class="modal-dialog modal-lg modal-dialog-centered">
+            <div class="modal-content border-0 rounded-4 shadow-lg">
+                <div class="modal-header border-0 py-3 bg-dark text-white">
+                    <h5 class="modal-title fw-bold"><i class="fas fa-file-alt text-warning me-2"></i> Preview Dokumen Scan</h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body p-0 text-center bg-secondary align-items-center d-flex justify-content-center" style="min-height: 300px;">
+                    <iframe id="preview-scan-pdf" style="width:100%; height:70vh; display:none;" frameborder="0"></iframe>
+                    <img id="preview-scan-img" style="display:none; max-width: 100%; padding: 10px;">
+                </div>
+            </div>
+        </div>
+    </div>
 
-<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
-<script src="https://unpkg.com/leaflet-control-geocoder/dist/Control.Geocoder.js"></script>
-<script>
-    // DATA WILAYAH CILEGON
-    const wilayahCilegon = {
-        "Cibeber": ["Cibeber", "Cikerai", "Kalitimbang", "Karangasem", "Kedaleman", "Bulakan"],
-        "Cilegon": ["Bendungan", "Ciwedus", "Ciwaduk", "Ketileng", "Bagendung"],
-        "Citangkil": ["Citangkil", "Deringo", "Kebonsari", "Lebak Denok", "Samangraya", "Warnasari", "Taman Baru"],
-        "Ciwandan": ["Banonji", "Gunung Sugih", "Kepuh", "Kubangsari", "Randakari", "Tegal Ratu"],
-        "Grogol": ["Grogol", "Gerem", "Kotak Bumi", "Rawa Arum"],
-        "Jombang": ["Jombang Wetan", "Gedong Dalem", "Panggung Rawi", "Sukmajaya", "Masigit"],
-        "Pulomerak": ["Lebak Gede", "Mekarsari", "Suralaya", "Tamansari"],
-        "Purwakarta": ["Purwakarta", "Kebondalem", "Kotabumi", "Pabean", "Ramanuju", "Tegal Bunder"]
-    };
+    <script>
+        // ==========================================
+        // 1. STATE & DATABASE MANAGEMENT
+        // ==========================================
+        const DEFAULT_PERMS = { lihat: true, tambah: true, edit: true, hapus: true, cetak: true, import: true };
 
-    // SYSTEM INIT
-    let dbAset = JSON.parse(localStorage.getItem('db_sistadig_v8_aset')) || [];
-    let dbUsers = JSON.parse(localStorage.getItem('db_sistadig_v8_users'));
-    let currentUser = null;
-    let markers = [];
-    let currentScanData = null;
-    let tempMarker = null;
-
-    // Default Admin setup if no users exist
-    if (!dbUsers || dbUsers.length === 0) {
-        dbUsers = [{ username: 'admin', password: 'admin123', perms: { tambah: true, edit: true, hapus: true, lihat: true } }];
-        localStorage.setItem('db_sistadig_v8_users', JSON.stringify(dbUsers));
-    }
-
-    // MAP INIT
-    var map = L.map('map').setView([-6.015, 106.025], 13);
-    L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', { attribution: '&copy; BPKPAD Cilegon' }).addTo(map);
-    L.Control.geocoder().addTo(map);
-
-    // LIVE CLOCK
-    setInterval(() => {
-        const now = new Date();
-        const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric', hour: '2-digit', minute: '2-digit', second:'2-digit' };
-        document.getElementById('liveClock').innerHTML = `<i class="far fa-clock me-1"></i> ${now.toLocaleDateString('id-ID', options)}`;
-    }, 1000);
-
-    // INIT DROPDOWN KECAMATAN
-    const selKec = document.getElementById('inpKec');
-    selKec.innerHTML = '<option value="">Pilih Kecamatan</option>';
-    Object.keys(wilayahCilegon).forEach(k => selKec.innerHTML += `<option value="${k}">${k}</option>`);
-
-    // CHECK SESSION ON LOAD
-    document.addEventListener("DOMContentLoaded", () => {
-        const sessionUser = sessionStorage.getItem("sistadig_user");
-        if(sessionUser) {
-            currentUser = JSON.parse(sessionUser);
-            masukKeSistem(false); // false = tanpa alert
-        }
-    });
-
-    // LOGIN & AUTH
-    function handleLogin() {
-        const u = document.getElementById('userLogin').value.trim();
-        const p = document.getElementById('passLogin').value;
-        
-        const userFound = dbUsers.find(x => x.username === u && x.password === p);
-
-        if(userFound) {
-            currentUser = userFound;
-            sessionStorage.setItem("sistadig_user", JSON.stringify(currentUser));
-            masukKeSistem(true);
-        } else {
-            Swal.fire({ icon: 'error', title: 'Akses Ditolak', text: 'Username atau Password salah!' });
-        }
-    }
-
-    function masukKeSistem(showAlert = true) {
-        document.getElementById('loginOverlay').style.display = 'none';
-        document.getElementById('mainContent').style.display = 'block';
-        document.getElementById('userDisplay').innerHTML = `<i class="fas fa-user-circle me-1"></i> Hai, ${currentUser.username}`;
-        
-        terapkanHakAkses();
-        
-        setTimeout(() => map.invalidateSize(), 500);
-        updateApp();
-
-        if(showAlert) {
-            Swal.fire({
-                icon: 'success', title: 'Login Berhasil', 
-                text: `Selamat datang, ${currentUser.username}!`, 
-                timer: 1500, showConfirmButton: false
-            });
-        }
-    }
-
-    function handleLogout() {
-        Swal.fire({
-            title: 'Keluar Sistem?', text: "Sesi Anda akan diakhiri.", icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#1a5c41', cancelButtonColor: '#d33',
-            confirmButtonText: 'Ya, Keluar!', cancelButtonText: 'Batal'
-        }).then((result) => {
-            if (result.isConfirmed) {
-                sessionStorage.removeItem("sistadig_user");
-                location.reload();
-            }
-        });
-    }
-
-    // RBAC LOGIC (HAK AKSES)
-    function terapkanHakAkses() {
-        const p = currentUser.perms;
-        
-        // Admin Access
-        if(currentUser.username === 'admin') {
-            document.getElementById('btnKelolaUser').style.display = 'inline-block';
-        } else {
-            document.getElementById('btnKelolaUser').style.display = 'none';
-        }
-
-        // Akses Tambah (Menampilkan Form)
-        if(p.tambah || p.edit) {
-            document.getElementById('panelForm').style.display = 'block';
-            document.getElementById('panelTabel').classList.replace('col-lg-9', 'col-lg-6');
-        } else {
-            document.getElementById('panelForm').style.display = 'none';
-            document.getElementById('panelTabel').classList.replace('col-lg-6', 'col-lg-9'); // Perlebar tabel jika form hilang
-        }
-
-        // Akses Tambah tombol import
-        document.getElementById('btnImport').style.display = p.tambah ? 'inline-block' : 'none';
-        
-        // Akses Aksi Tabel diatur di dalam render tabel (updateApp)
-    }
-
-    // USER MANAGEMENT
-    function bukaModalUser() {
-        renderTabelUser();
-        resetFormUser();
-        new bootstrap.Modal(document.getElementById('modalUser')).show();
-    }
-
-    function renderTabelUser() {
-        const tbody = document.getElementById('tabelUsers');
-        tbody.innerHTML = '';
-        dbUsers.forEach((u, i) => {
-            let badge = [];
-            if(u.perms.tambah) badge.push('<span class="badge bg-primary">Tambah</span>');
-            if(u.perms.edit) badge.push('<span class="badge bg-warning text-dark">Edit</span>');
-            if(u.perms.hapus) badge.push('<span class="badge bg-danger">Hapus</span>');
-            if(badge.length === 0) badge.push('<span class="badge bg-secondary">Lihat Saja</span>');
-
-            tbody.innerHTML += `
-                <tr>
-                    <td class="fw-bold">${u.username}</td>
-                    <td>${u.password}</td>
-                    <td>${badge.join(' ')}</td>
-                    <td>
-                        ${u.username === 'admin' ? '<span class="badge bg-dark">Super Admin</span>' : `
-                        <button class="btn btn-sm btn-warning py-0 px-1" onclick="editUser(${i})"><i class="fas fa-edit"></i></button>
-                        <button class="btn btn-sm btn-danger py-0 px-1" onclick="hapusUser(${i})"><i class="fas fa-trash"></i></button>
-                        `}
-                    </td>
-                </tr>
-            `;
-        });
-    }
-
-    function simpanUser() {
-        const idx = parseInt(document.getElementById('userIdx').value);
-        const uname = document.getElementById('uName').value.trim();
-        const upass = document.getElementById('uPass').value.trim();
-        
-        if(!uname || !upass) return Swal.fire('Error', 'Username dan password wajib diisi!', 'error');
-        if(uname === 'admin' && idx !== 0) return Swal.fire('Error', 'Username admin tidak boleh digunakan!', 'error');
-
-        const userData = {
-            username: uname, password: upass,
-            perms: {
-                lihat: true,
-                tambah: document.getElementById('chkTambah').checked,
-                edit: document.getElementById('chkEdit').checked,
-                hapus: document.getElementById('chkHapus').checked
-            }
+        let DB = {
+            aset: JSON.parse(localStorage.getItem('st_db_aset_v13')) || [],
+            akun: JSON.parse(localStorage.getItem('st_db_akun_v13')) || [
+                { id: 1, role: 'Admin', user: 'admin', pass: 'admin123', namaOpd: 'BPKPAD', kodeOpd: '1.01', perms: DEFAULT_PERMS }
+            ],
+            session: JSON.parse(localStorage.getItem('st_session_v13')) || null,
+            refOpd: JSON.parse(localStorage.getItem('st_ref_opd_v13')) || [],
+            refWilayah: JSON.parse(localStorage.getItem('st_ref_wilayah_v13')) || {}
         };
 
-        if(idx === -1) {
-            if(dbUsers.find(x => x.username === uname)) return Swal.fire('Error', 'Username sudah ada!', 'error');
-            dbUsers.push(userData);
-        } else {
-            dbUsers[idx] = userData;
-        }
-
-        localStorage.setItem('db_sistadig_v8_users', JSON.stringify(dbUsers));
-        renderTabelUser();
-        resetFormUser();
-        Swal.fire('Tersimpan', 'Data user berhasil disimpan.', 'success');
-    }
-
-    function editUser(i) {
-        const u = dbUsers[i];
-        document.getElementById('userIdx').value = i;
-        document.getElementById('uName').value = u.username;
-        document.getElementById('uPass').value = u.password;
-        document.getElementById('chkTambah').checked = u.perms.tambah;
-        document.getElementById('chkEdit').checked = u.perms.edit;
-        document.getElementById('chkHapus').checked = u.perms.hapus;
-    }
-
-    function hapusUser(i) {
-        if(dbUsers[i].username === 'admin') return;
-        Swal.fire({
-            title: 'Hapus User?', icon: 'warning', showCancelButton: true, confirmButtonText: 'Ya', cancelButtonText: 'Batal'
-        }).then((res) => {
-            if(res.isConfirmed) {
-                dbUsers.splice(i, 1);
-                localStorage.setItem('db_sistadig_v8_users', JSON.stringify(dbUsers));
-                renderTabelUser();
+        function saveDB() {
+            try {
+                localStorage.setItem('st_db_aset_v13', JSON.stringify(DB.aset));
+                localStorage.setItem('st_db_akun_v13', JSON.stringify(DB.akun));
+                localStorage.setItem('st_session_v13', JSON.stringify(DB.session));
+                localStorage.setItem('st_ref_opd_v13', JSON.stringify(DB.refOpd));
+                localStorage.setItem('st_ref_wilayah_v13', JSON.stringify(DB.refWilayah));
+            } catch (e) {
+                console.error("Local storage error (mungkin kepenuhan file base64):", e);
+                Swal.fire('Peringatan Penyimpanan', 'Penyimpanan lokal penuh. Hapus beberapa data scan yang terlalu besar.', 'warning');
             }
-        });
-    }
-
-    function resetFormUser() {
-        document.getElementById('userIdx').value = -1;
-        document.getElementById('uName').value = '';
-        document.getElementById('uPass').value = '';
-        document.getElementById('chkTambah').checked = false;
-        document.getElementById('chkEdit').checked = false;
-        document.getElementById('chkHapus').checked = false;
-    }
-
-    // FORM HELPER
-    function formatAngka(input) {
-        let val = input.value.replace(/[^0-9]/g, "");
-        if (val) input.value = parseInt(val).toLocaleString('id-ID');
-    }
-
-    function toggleSertifikat() {
-        const s = document.getElementById('inpStatusSer').value;
-        const inpNo = document.getElementById('inpNo');
-        const inpTgl = document.getElementById('inpTglSer');
-        if(s === "belum") {
-            inpNo.value = "Belum Terdaftar";
-            inpNo.disabled = true; inpTgl.disabled = true;
-        } else {
-            if(inpNo.value === "Belum Terdaftar") inpNo.value = "";
-            inpNo.disabled = false; inpTgl.disabled = false;
         }
-    }
 
-    function updateKelurahan() {
-        const k = document.getElementById('inpKec').value;
-        const s = document.getElementById('inpKel');
-        s.innerHTML = '<option value="">Pilih Kelurahan</option>';
-        if(k && wilayahCilegon[k]) wilayahCilegon[k].forEach(x => s.innerHTML += `<option value="${x}">${x}</option>`);
-    }
+        // ==========================================
+        // 2. CORE APP & SECURITY
+        // ==========================================
+        const app = {
+            init() {
+                if(DB.refOpd.length === 0) {
+                    DB.refOpd = [
+                        { kode: "1.01.01.01", nama: "Dinas Pendidikan" },
+                        { kode: "1.01.02.01", nama: "Dinas Kesehatan" },
+                        { kode: "1.01.03.01", nama: "Dinas Pekerjaan Umum dan Tata Ruang" }
+                    ];
+                }
+                if(Object.keys(DB.refWilayah).length === 0) {
+                    DB.refWilayah = {
+                        "Kota Cilegon": {
+                            "Cibeber": ["Cibeber", "Cikerai", "Kalitimbang", "Karangasem", "Kedaleman", "Bulakan"],
+                            "Pulomerak": ["Lebak Gede", "Mekarsari", "Suralaya", "Tamansari"]
+                        }
+                    };
+                }
+                saveDB();
 
-    // MAP LOGIC
-    map.on('click', function(e) {
-        if(!currentUser.perms.tambah && !currentUser.perms.edit) return; // Kunci peta jika tidak punya akses form
-        if (tempMarker) map.removeLayer(tempMarker);
-        tempMarker = L.marker(e.latlng, {icon: L.divIcon({className: 'fas fa-crosshairs text-danger fa-2x'})}).addTo(map);
-        document.getElementById('inpKoordinat').value = `${e.latlng.lat.toFixed(6)}, ${e.latlng.lng.toFixed(6)}`;
-    });
+                if (!DB.session) {
+                    document.getElementById('login-screen').style.display = 'flex';
+                    document.getElementById('app-wrapper').style.display = 'none';
+                } else {
+                    document.getElementById('login-screen').style.display = 'none';
+                    document.getElementById('app-wrapper').style.display = 'block';
+                    this.applyPermissions();
+                }
+            },
+            togglePassword() {
+                const passInput = document.getElementById('login-pass');
+                const eyeIcon = document.getElementById('eye-icon');
+                if (passInput.type === "password") {
+                    passInput.type = "text";
+                    eyeIcon.classList.remove('fa-eye');
+                    eyeIcon.classList.add('fa-eye-slash');
+                } else {
+                    passInput.type = "password";
+                    eyeIcon.classList.remove('fa-eye-slash');
+                    eyeIcon.classList.add('fa-eye');
+                }
+            },
+            login(e) {
+                e.preventDefault();
+                const u = document.getElementById('login-user').value;
+                const p = document.getElementById('login-pass').value;
+                
+                const akunValid = DB.akun.find(a => a.user === u && a.pass === p);
+                if (akunValid) {
+                    DB.session = akunValid;
+                    if(!DB.session.perms) DB.session.perms = DEFAULT_PERMS;
+                    saveDB();
+                    Swal.fire({ icon: 'success', title: 'Login Berhasil', timer: 1000, showConfirmButton: false }).then(() => this.init());
+                } else {
+                    Swal.fire('Akses Ditolak', 'Username atau Password salah!', 'error');
+                }
+            },
+            logout() {
+                DB.session = null;
+                saveDB();
+                window.location.reload();
+            },
+            applyPermissions() {
+                const s = DB.session;
+                document.getElementById('user-initial').innerText = s.user.charAt(0).toUpperCase();
+                document.getElementById('user-name').innerText = s.user;
+                document.getElementById('user-opd').innerText = s.namaOpd || s.role;
+                
+                const isAdmin = s.role === 'Admin';
+                const p = s.perms || DEFAULT_PERMS;
 
-    function ambilDariPeta() {
-        Swal.fire({ icon: 'info', title: 'Ambil Titik', text: 'Silakan klik pada peta untuk mengambil koordinat.', timer: 2500, showConfirmButton: false });
-    }
+                // UI Visibility
+                document.getElementById('menu-admin').style.display = isAdmin ? 'block' : 'none';
+                
+                // Button Permissions on KIB A
+                document.getElementById('btn-tambah').style.display = (isAdmin || p.tambah) ? 'inline-block' : 'none';
+                document.getElementById('btn-export').style.display = (isAdmin || p.cetak) ? 'inline-block' : 'none';
+                
+                // Import & Template Excel Logic (Muncul jika admin ATAU jika opd diberi hak akses import)
+                const showImport = isAdmin || p.import;
+                document.getElementById('btn-template').style.display = showImport ? 'inline-block' : 'none';
+                document.getElementById('btn-import').style.display = showImport ? 'inline-block' : 'none';
 
-    function parseKoordinat(str) {
-        if(!str) return null;
-        const c = str.split(/[\s,]+/);
-        if(c.length >= 2) {
-            const lat = parseFloat(c[0]); const lng = parseFloat(c[1]);
-            if(!isNaN(lat) && !isNaN(lng)) return { lat, lng };
-        }
-        return null;
-    }
+                // Prevent access if not allowed to see
+                if(!isAdmin && !p.lihat) {
+                    document.getElementById('nav-data-aset').style.display = 'none';
+                }
 
-    function previewScan(input) {
-        if (input.files && input.files[0]) {
-            const reader = new FileReader();
-            reader.onload = e => { currentScanData = e.target.result; renderScanViewer(currentScanData); };
-            reader.readAsDataURL(input.files[0]);
-        }
-    }
-
-    function renderScanViewer(dataUri) {
-        const viewer = document.getElementById('scanViewer');
-        if(!dataUri) {
-            viewer.innerHTML = '<div class="text-center p-4"><i class="fas fa-file-image fa-3x text-secondary mb-2 opacity-50"></i><p class="text-muted mb-0 small">Dokumen tidak tersedia</p></div>';
-            return;
-        }
-        viewer.innerHTML = `<img src="${dataUri}"><div style="position:absolute; bottom:10px; right:10px;"><a href="${dataUri}" download="Sertifikat.png" class="btn btn-success btn-sm"><i class="fas fa-download"></i> Unduh</a></div>`;
-    }
-
-    // CRUD LOGIC ASET
-    function simpanData() {
-        if(!currentUser.perms.tambah && !currentUser.perms.edit) return Swal.fire('Akses Ditolak', 'Anda tidak memiliki hak akses menyimpan data.', 'error');
-
-        const idx = parseInt(document.getElementById('editIndex').value);
-        if(idx === -1 && !currentUser.perms.tambah) return Swal.fire('Akses Ditolak', 'Anda tidak memiliki hak akses menambah data.', 'error');
-        if(idx !== -1 && !currentUser.perms.edit) return Swal.fire('Akses Ditolak', 'Anda tidak memiliki hak akses mengedit data.', 'error');
-
-        const coordRaw = document.getElementById('inpKoordinat').value;
-        const k = parseKoordinat(coordRaw);
-        
-        let finalScan = currentScanData;
-        if (idx !== -1 && !currentScanData) finalScan = dbAset[idx].scan;
-
-        const data = {
-            register: document.getElementById('inpRegister').value || "-",
-            opd: document.getElementById('inpOpd').value,
-            namaUmum: document.getElementById('inpNamaUmum').value,
-            nama: document.getElementById('inpNama').value,
-            status: document.getElementById('inpStatusSer').value,
-            tglSer: document.getElementById('inpTglSer').value,
-            no: document.getElementById('inpNo').value,
-            kec: document.getElementById('inpKec').value,
-            kel: document.getElementById('inpKel').value,
-            luas: document.getElementById('inpLuas').value,
-            tahun: document.getElementById('inpTahun').value,
-            harga: document.getElementById('inpHarga').value,
-            koordinat: coordRaw,
-            lat: k ? k.lat : null, lng: k ? k.lng : null, scan: finalScan
-        };
-
-        if(!data.nama || !data.luas) return Swal.fire('Data Tidak Lengkap', 'Nama Barang dan Luas wajib diisi!', 'warning');
-
-        Swal.fire({
-            title: idx === -1 ? 'Simpan Data Baru?' : 'Simpan Perubahan?',
-            icon: 'question', showCancelButton: true, confirmButtonColor: '#1a5c41',
-            confirmButtonText: 'Ya, Simpan!', cancelButtonText: 'Batal'
-        }).then((res) => {
-            if (res.isConfirmed) {
-                if(idx === -1) dbAset.push(data);
-                else dbAset[idx] = data;
-
-                localStorage.setItem('db_sistadig_v8_aset', JSON.stringify(dbAset));
-                resetForm();
-                updateApp(); 
-                if (tempMarker) map.removeLayer(tempMarker);
-                Swal.fire({ icon: 'success', title: 'Berhasil!', text: 'Data tersimpan.', timer: 1500, showConfirmButton: false });
-            }
-        });
-    }
-
-    function resetForm() {
-        document.getElementById('editIndex').value = "-1";
-        document.getElementById('formTitle').innerHTML = '<i class="fas fa-plus-circle me-2"></i>INPUT DATA ASET';
-        document.getElementById('panelTombolForm').style.display = currentUser.perms.tambah ? 'block' : 'none';
-        
-        ['inpRegister', 'inpOpd', 'inpNamaUmum', 'inpNama', 'inpTglSer', 'inpNo', 'inpKec', 'inpLuas', 'inpTahun', 'inpHarga', 'inpKoordinat', 'inpFile'].forEach(id => document.getElementById(id).value = "");
-        document.getElementById('inpKel').innerHTML = "";
-        document.getElementById('inpStatusSer').value = "sudah";
-        renderScanViewer(null);
-        currentScanData = null;
-        toggleSertifikat();
-    }
-
-    // Fungsi edit global agar bisa diakses dari atribut onclick html
-    window.editData = function(i) {
-        if(!currentUser.perms.edit) return Swal.fire('Akses Ditolak', 'Anda tidak memiliki hak edit.', 'error');
-        
-        const d = dbAset[i];
-        document.getElementById('editIndex').value = i;
-        document.getElementById('formTitle').innerHTML = '<i class="fas fa-edit me-2 text-warning"></i>MODE EDIT DATA';
-        document.getElementById('panelTombolForm').style.display = 'block'; // Paksa tampil tombol form saat mode edit jalan
-        
-        document.getElementById('inpRegister').value = d.register || "";
-        document.getElementById('inpOpd').value = d.opd || "";
-        document.getElementById('inpNamaUmum').value = d.namaUmum || "";
-        document.getElementById('inpNama').value = d.nama || "";
-        document.getElementById('inpStatusSer').value = d.status || "sudah";
-        toggleSertifikat();
-        document.getElementById('inpTglSer').value = d.tglSer || "";
-        document.getElementById('inpNo').value = d.no || "";
-        document.getElementById('inpKec').value = d.kec || "";
-        updateKelurahan();
-        document.getElementById('inpKel').value = d.kel || "";
-        document.getElementById('inpLuas').value = d.luas || "";
-        document.getElementById('inpTahun').value = d.tahun || "";
-        document.getElementById('inpHarga').value = d.harga || "";
-        document.getElementById('inpKoordinat').value = d.koordinat || "";
-        
-        currentScanData = null; 
-        renderScanViewer(d.scan);
-        
-        if (d.lat && d.lng) {
-            map.flyTo([d.lat, d.lng], 16);
-            if (tempMarker) map.removeLayer(tempMarker);
-            tempMarker = L.marker([d.lat, d.lng]).addTo(map);
-        }
-    };
-
-    window.hapus = function(i) {
-        if(!currentUser.perms.hapus) return Swal.fire('Akses Ditolak', 'Anda tidak memiliki hak hapus.', 'error');
-        
-        Swal.fire({
-            title: 'Hapus Data Aset?', text: "Data tidak dapat dikembalikan!", icon: 'warning',
-            showCancelButton: true, confirmButtonColor: '#d33', confirmButtonText: 'Ya, Hapus!', cancelButtonText: 'Batal'
-        }).then((res) => {
-            if (res.isConfirmed) {
-                dbAset.splice(i, 1);
-                localStorage.setItem('db_sistadig_v8_aset', JSON.stringify(dbAset));
-                updateApp();
-                Swal.fire('Terhapus!', 'Data berhasil dihapus.', 'success');
-            }
-        });
-    };
-
-    // DASHBOARD & TABEL UPDATE
-    function updateSummary() {
-        const totAset = dbAset.length;
-        let totHarga = 0;
-        dbAset.forEach(d => {
-            if(d.harga) {
-                const num = parseInt(d.harga.replace(/[^0-9]/g, ""));
-                if(!isNaN(num)) totHarga += num;
-            }
-        });
-        document.getElementById('totAset').innerHTML = `${totAset} <span class="fs-6 text-muted">Bidang</span>`;
-        document.getElementById('totNilai').innerText = `Rp ${totHarga.toLocaleString('id-ID')}`;
-    }
-
-    function updateDropdownOPD() {
-        const filterOpd = document.getElementById('filterOpd');
-        const selectedVal = filterOpd.value;
-        filterOpd.innerHTML = '<option value="">Semua OPD</option>';
-        const opdList = [...new Set(dbAset.map(item => item.opd).filter(val => val && val.trim() !== ''))].sort();
-        opdList.forEach(opd => filterOpd.innerHTML += `<option value="${opd}">${opd}</option>`);
-        filterOpd.value = selectedVal;
-    }
-
-    function updateApp() {
-        updateSummary();
-        updateDropdownOPD();
-        
-        const tbody = document.getElementById('isiTabel');
-        if (!tbody) return;
-        
-        tbody.innerHTML = '';
-        markers.forEach(m => map.removeLayer(m));
-        markers = [];
-
-        // Atur visibilitas kolom aksi berdasarkan perms
-        const showAksi = currentUser.perms.edit || currentUser.perms.hapus;
-        const thAksi = document.querySelector('.col-aksi');
-        if(thAksi) thAksi.style.display = showAksi ? 'table-cell' : 'none';
-
-        dbAset.forEach((item, index) => {
-            const tr = document.createElement('tr');
-            tr.className = "text-center";
-            tr.style.cursor = "pointer";
-            tr.onclick = () => fokusAset(index);
-            
-            let htmlAksi = '';
-            if(showAksi) {
-                htmlAksi = `<td onclick="event.stopPropagation();">
-                    <div class="d-flex gap-1 justify-content-center">
-                        ${currentUser.perms.edit ? `<button class="btn btn-warning btn-sm px-2 py-1 text-dark" title="Edit" onclick="editData(${index})"><i class="fas fa-edit"></i></button>` : ''}
-                        ${currentUser.perms.hapus ? `<button class="btn btn-danger btn-sm px-2 py-1" title="Hapus" onclick="hapus(${index})"><i class="fas fa-trash"></i></button>` : ''}
-                    </div>
-                </td>`;
-            }
-
-            tr.innerHTML = `
-                <td>${index + 1}</td>
-                <td class="fw-bold text-success">${item.register || '-'}</td>
-                <td class="text-start">${item.opd || '-'}</td>
-                <td class="text-start">${item.namaUmum || '-'}</td>
-                <td class="text-start fw-bold">${item.nama || '-'}</td>
-                <td><span class="badge badge-sertif ${item.status==='sudah'?'bg-success':'bg-danger'}">${item.status === 'sudah' ? 'Bersertifikat' : 'Belum'}</span></td>
-                <td>${item.tglSer ? item.tglSer.split('-').reverse().join('-') : '-'}</td>
-                <td>${item.no || '-'}</td>
-                <td>${item.kec || '-'}</td>
-                <td>${item.kel || '-'}</td>
-                <td>${item.luas}</td>
-                <td>${item.tahun || '-'}</td>
-                <td class="text-end">Rp ${item.harga || '0'}</td>
-                <td style="font-size:9px;">${item.koordinat || '-'}</td>
-                ${htmlAksi}
-            `;
-            tbody.appendChild(tr);
-
-            if (item.lat && item.lng) {
-                const icon = L.divIcon({ html: `<i class="fas fa-map-marker-alt fa-2x text-success" style="filter: drop-shadow(0px 2px 2px rgba(0,0,0,0.5));"></i>`, className: 'custom-div-icon', iconSize: [24, 24], iconAnchor: [12, 24] });
-                const m = L.marker([item.lat, item.lng], {icon: icon})
-                    .addTo(map)
-                    .bindPopup(`
-                        <div class="custom-popup">
-                            <h6 class="fw-bold mb-1 text-success">${item.nama}</h6>
-                            <p class="mb-0 small fw-bold">Reg: ${item.register || '-'}</p>
-                            <p class="mb-0 small">${item.opd}</p>
-                        </div>
-                    `);
-                markers.push(m);
-            }
-        });
-        
-        applyFilters(); 
-    }
-
-    function applyFilters() {
-        const valOpd = document.getElementById('filterOpd').value.toLowerCase();
-        const valTahun = document.getElementById('filterTahun').value;
-        const valSampai = document.getElementById('filterSampaiTahun').value;
-        const valCari = document.getElementById('cariData').value.toLowerCase();
-
-        const rows = document.querySelectorAll('#isiTabel tr');
-
-        rows.forEach((tr, index) => {
-            const d = dbAset[index];
-            let isVisible = true;
-            if (valOpd && (!d.opd || d.opd.toLowerCase() !== valOpd)) isVisible = false;
-            if (valTahun && d.tahun != valTahun) isVisible = false;
-            if (valSampai && (!d.tahun || parseInt(d.tahun) > parseInt(valSampai))) isVisible = false;
-            if (valCari && !tr.innerText.toLowerCase().includes(valCari)) isVisible = false;
-            tr.style.display = isVisible ? '' : 'none';
-        });
-    }
-
-    function fokusAset(i) {
-        const d = dbAset[i];
-        if (d.lat && d.lng) {
-            map.flyTo([d.lat, d.lng], 17);
-            if (markers[i]) markers[i].openPopup();
-        }
-        
-        document.querySelectorAll('#isiTabel tr').forEach(r => r.classList.remove('selected'));
-        const rows = document.querySelectorAll('#isiTabel tr');
-        if(rows[i]) rows[i].classList.add('selected');
-        
-        renderScanViewer(d.scan);
-        document.getElementById('infoTerpilih').innerHTML = `
-            <table class="table table-sm table-borderless mb-0" style="font-size: 11px;">
-                <tr><td width="70"><strong>Register</strong></td><td>: <span class="badge bg-success">${d.register || '-'}</span></td></tr>
-                <tr><td><strong>OPD</strong></td><td>: ${d.opd || '-'}</td></tr>
-                <tr><td><strong>Kec/Kel</strong></td><td>: ${d.kec || '-'}/${d.kel || '-'}</td></tr>
-                <tr><td><strong>Thn/Luas</strong></td><td>: ${d.tahun || '-'} / ${d.luas} m²</td></tr>
-                <tr><td><strong>Status</strong></td><td>: ${d.status === 'sudah' ? 'Bersertifikat' : 'Belum'}</td></tr>
-                <tr><td><strong>Sertifikat</strong></td><td>: ${d.no || '-'}</td></tr>
-                <tr><td><strong>Harga</strong></td><td>: Rp ${d.harga || '0'}</td></tr>
-            </table>
-        `;
-    }
-
-    // EXCEL EXPORT/IMPORT
-    function downloadTemplate() {
-        const headers = [["No. Register", "OPD Pengguna", "Nama Umum Barang", "Nama Barang Spesifik", "Status Sertifikat", "Tgl Sertifikat", "No. Sertifikat", "Kecamatan", "Kelurahan", "Luas (m2)", "Tahun Perolehan", "Harga Perolehan (Rp)", "Titik Koordinat"]];
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.aoa_to_sheet(headers);
-        XLSX.utils.book_append_sheet(wb, ws, "Template");
-        XLSX.writeFile(wb, "Template_SISTADIG_Cilegon.xlsx");
-    }
-
-    function handleImport(input) {
-        if(!currentUser.perms.tambah) return Swal.fire('Ditolak', 'Tidak ada akses import.', 'error');
-        const file = input.files[0];
-        if (!file) return;
-        const reader = new FileReader();
-        reader.onload = (e) => {
-            const data = new Uint8Array(e.target.result);
-            const workbook = XLSX.read(data, { type: 'array' });
-            const sheet = workbook.Sheets[workbook.SheetNames[0]];
-            const json = XLSX.utils.sheet_to_json(sheet);
-            
-            json.forEach(row => {
-                const k = parseKoordinat(String(row["Titik Koordinat"] || ""));
-                dbAset.push({
-                    register: row["No. Register"] || "",
-                    opd: row["OPD Pengguna"] || "",
-                    namaUmum: row["Nama Umum Barang"] || "",
-                    nama: row["Nama Barang Spesifik"] || "",
-                    status: String(row["Status Sertifikat"]).toLowerCase().includes("belum") ? "belum" : "sudah",
-                    tglSer: row["Tgl Sertifikat"] || "",
-                    no: row["No. Sertifikat"] || "",
-                    kec: row["Kecamatan"] || "",
-                    kel: row["Kelurahan"] || "",
-                    luas: String(row["Luas (m2)"] || "0"),
-                    tahun: row["Tahun Perolehan"] || "",
-                    harga: String(row["Harga Perolehan (Rp)"] || "0"),
-                    koordinat: row["Titik Koordinat"] || "",
-                    lat: k ? k.lat : null, lng: k ? k.lng : null, scan: null
+                ui.navigate('dashboard');
+                geo.initFilters();
+                kib.render();
+                akun.render();
+            },
+            masterLogin() {
+                if(DB.session.role !== 'Admin') return; 
+                Swal.fire({
+                    title: 'Akses Keamanan Master',
+                    input: 'password',
+                    inputPlaceholder: 'Masukkan Password Pengamanan',
+                    showCancelButton: true,
+                    confirmButtonText: 'Buka Akses'
+                }).then((res) => {
+                    if (res.isConfirmed && res.value === 'pengamanan') {
+                        document.getElementById('menu-master').style.display = 'block';
+                        ui.navigate('master-data');
+                        Swal.fire('Akses Dibuka', 'Selamat datang di Master Setup', 'success');
+                    } else if (res.isConfirmed) {
+                        Swal.fire('Ditolak', 'Password salah', 'error');
+                    }
                 });
-            });
-            localStorage.setItem('db_sistadig_v8_aset', JSON.stringify(dbAset));
-            updateApp();
-            Swal.fire('Import Selesai', `Berhasil impor ${json.length} data!`, 'success');
-            input.value = ""; 
+            }
         };
-        reader.readAsArrayBuffer(file);
-    }
 
-    function exportKeExcel() {
-        if (dbAset.length === 0) return Swal.fire('Data Kosong', 'Tidak ada data untuk diekspor.', 'info');
-        const exportData = dbAset.map((d, index) => ({
-            "No": index + 1,
-            "No. Register": d.register,
-            "OPD Pengguna Barang": d.opd, 
-            "Nama Umum Barang": d.namaUmum,
-            "Nama Barang Spesifik": d.nama, 
-            "Status Sertifikat": d.status === 'sudah' ? 'Bersertifikat' : 'Belum',
-            "Tgl Sertifikat": d.tglSer,
-            "No. Sertifikat": d.no, 
-            "Kecamatan": d.kec,
-            "Kelurahan": d.kel,
-            "Luas (m2)": d.luas, 
-            "Tahun Perolehan": d.tahun,
-            "Harga Perolehan (Rp)": d.harga, 
-            "Titik Koordinat": d.koordinat
-        }));
-        const wb = XLSX.utils.book_new();
-        const ws = XLSX.utils.json_to_sheet(exportData);
-        XLSX.utils.book_append_sheet(wb, ws, "KIB_A");
-        XLSX.writeFile(wb, "Laporan_Aset_Cilegon.xlsx");
-    }
-</script>
+        // ==========================================
+        // 3. UI NAVIGATION
+        // ==========================================
+        const ui = {
+            navigate(page) {
+                document.querySelectorAll('.view-section').forEach(el => el.classList.remove('active'));
+                document.querySelectorAll('.nav-link').forEach(el => el.classList.remove('active'));
+                
+                document.getElementById(`view-${page}`).classList.add('active');
+                const navLink = document.querySelector(`[data-page="${page}"]`);
+                if(navLink) navLink.classList.add('active');
+
+                if (page === 'dashboard') logic.renderDashboard();
+                if (page === 'peta') {
+                    geo.renderMap();
+                    setTimeout(() => geo.mainMap.invalidateSize(), 100);
+                }
+                if (page === 'data-aset') kib.updateFilterOPD();
+            },
+            modalKib(mode, id = null) {
+                const modalEl = document.getElementById('modal-kib');
+                const modal = new bootstrap.Modal(modalEl);
+                document.getElementById('form-kib').reset();
+                document.getElementById('modal-kib-title').innerHTML = mode === 'tambah' ? '<i class="fas fa-plus-circle text-warning me-2"></i>Tambah Data KIB A' : '<i class="fas fa-edit text-warning me-2"></i>Edit Data KIB A';
+                document.getElementById('kib-id').value = id || '';
+                document.getElementById('kib-scan-data').value = '';
+                document.getElementById('kib-status').className = "form-select bg-white border-danger fw-bold text-danger"; // reset color
+
+                const opdSel = document.getElementById('kib-opd');
+                opdSel.innerHTML = '<option value="">Pilih OPD</option>';
+                if(DB.session.role === 'Admin') {
+                    DB.refOpd.forEach(o => opdSel.innerHTML += `<option value="${o.nama}" data-kode="${o.kode}">${o.nama}</option>`);
+                } else {
+                    opdSel.innerHTML += `<option value="${DB.session.namaOpd}" data-kode="${DB.session.kodeOpd}" selected>${DB.session.namaOpd}</option>`;
+                    document.getElementById('kib-kodeopd').value = DB.session.kodeOpd;
+                }
+
+                if (mode === 'edit') {
+                    const data = DB.aset.find(x => x.id === id);
+                    if(data) {
+                        document.getElementById('kib-opd').value = data.opd || '';
+                        document.getElementById('kib-kodeopd').value = data.kodeOpd || '';
+                        document.getElementById('kib-register').value = data.register || '';
+                        document.getElementById('kib-namaumum').value = data.namaUmum || '';
+                        document.getElementById('kib-namaspesifik').value = data.nama || '';
+                        document.getElementById('kib-letak').value = data.letak || '';
+                        document.getElementById('kib-asal').value = data.asal || '';
+                        document.getElementById('kib-kota').value = data.kota || '';
+                        geo.loadKec(data.kota || '');
+                        document.getElementById('kib-kec').value = data.kec || '';
+                        geo.loadKel(data.kec || '');
+                        document.getElementById('kib-kel').value = data.kel || '';
+                        document.getElementById('kib-lat').value = data.lat || '';
+                        document.getElementById('kib-lng').value = data.lng || '';
+                        document.getElementById('kib-penggunaan').value = data.penggunaan || '';
+                        document.getElementById('kib-luas').value = data.luas || '';
+                        document.getElementById('kib-tahun').value = data.tahun || '';
+                        document.getElementById('kib-harga').value = data.harga || '';
+                        
+                        const statusEl = document.getElementById('kib-status');
+                        statusEl.value = data.status || 'belum';
+                        statusEl.className = data.status === 'sudah' ? 'form-select bg-white border-success fw-bold text-success' : 'form-select bg-white border-danger fw-bold text-danger';
+                        
+                        document.getElementById('kib-tglsertifikat').value = data.tglSertifikat || '';
+                        document.getElementById('kib-nosertifikat').value = data.no || '';
+                        document.getElementById('kib-scan-data').value = data.scan || '';
+
+                        if(data.lat && data.lng) {
+                            setTimeout(() => { geo.setModalMarker(data.lat, data.lng); }, 500);
+                        }
+                    }
+                } else {
+                    geo.loadKec('');
+                    setTimeout(() => { if(geo.modalMarker) geo.modalMap.removeLayer(geo.modalMarker); }, 500);
+                }
+                
+                modal.show();
+                modalEl.addEventListener('shown.bs.modal', function () { geo.initModalMap(); }, { once: true });
+            },
+            modalAkun(mode, id = null) {
+                const modal = new bootstrap.Modal(document.getElementById('modal-akun'));
+                document.getElementById('form-akun').reset();
+                document.getElementById('modal-akun-title').innerHTML = mode === 'tambah' ? '<i class="fas fa-user-plus me-2 text-warning"></i>Tambah Akun' : '<i class="fas fa-user-edit me-2 text-warning"></i>Edit Akun';
+                document.getElementById('akun-id').value = id || '';
+                
+                const sel = document.getElementById('akun-opd-select');
+                sel.innerHTML = '<option value="">Pilih OPD</option>' + DB.refOpd.map(o => `<option value="${o.kode}" data-nama="${o.nama}">${o.kode} - ${o.nama}</option>`).join('');
+
+                if(mode === 'edit') {
+                    const data = DB.akun.find(x => x.id === id);
+                    document.getElementById('akun-role').value = data.role;
+                    document.getElementById('akun-opd-select').value = data.kodeOpd || '';
+                    document.getElementById('akun-kodeopd').value = data.kodeOpd || '';
+                    document.getElementById('akun-namaopd').value = data.namaOpd || '';
+                    document.getElementById('akun-username').value = data.user;
+                    document.getElementById('akun-password').value = data.pass;
+                    
+                    if(data.perms) {
+                        document.getElementById('perm-tambah').checked = data.perms.tambah;
+                        document.getElementById('perm-edit').checked = data.perms.edit;
+                        document.getElementById('perm-hapus').checked = data.perms.hapus;
+                        document.getElementById('perm-cetak').checked = data.perms.cetak;
+                        document.getElementById('perm-import').checked = data.perms.import || false;
+                    }
+                    akun.toggleForm(data.role);
+                } else {
+                    document.getElementById('perm-tambah').checked = true;
+                    document.getElementById('perm-edit').checked = true;
+                    document.getElementById('perm-hapus').checked = true;
+                    document.getElementById('perm-cetak').checked = true;
+                    document.getElementById('perm-import').checked = false;
+                    akun.toggleForm('OPD Pengguna');
+                }
+                modal.show();
+            }
+        };
+
+        // ==========================================
+        // 4. MAP & GEO LOGIC
+        // ==========================================
+        const geo = {
+            mainMap: null, modalMap: null, modalMarker: null,
+            initFilters() {
+                const kotaSel = document.getElementById('kib-kota');
+                kotaSel.innerHTML = '<option value="">Pilih Kota/Kab</option>';
+                Object.keys(DB.refWilayah).forEach(k => kotaSel.innerHTML += `<option value="${k}">${k}</option>`);
+            },
+            loadKec(kota) {
+                const sel = document.getElementById('kib-kec');
+                sel.innerHTML = '<option value="">Pilih Kecamatan</option>';
+                if(kota && DB.refWilayah[kota]) {
+                    Object.keys(DB.refWilayah[kota]).forEach(k => sel.innerHTML += `<option value="${k}">${k}</option>`);
+                }
+                this.loadKel('');
+            },
+            loadKel(kec) {
+                const kota = document.getElementById('kib-kota').value;
+                const sel = document.getElementById('kib-kel');
+                sel.innerHTML = '<option value="">Pilih Kelurahan/Desa</option>';
+                if(kota && kec && DB.refWilayah[kota][kec]) {
+                    DB.refWilayah[kota][kec].forEach(k => sel.innerHTML += `<option value="${k}">${k}</option>`);
+                }
+            },
+            renderMap() {
+                if (!this.mainMap) {
+                    this.mainMap = L.map('map').setView([-6.0123, 106.0123], 12);
+                    L.tileLayer('http://{s}.google.com/vt/lyrs=y,h&x={x}&y={y}&z={z}',{
+                        maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']
+                    }).addTo(this.mainMap);
+
+                    L.Control.geocoder({defaultMarkGeocode: false, position: 'topright'})
+                        .on('markgeocode', function(e) { geo.mainMap.fitBounds(e.geocode.bbox); })
+                        .addTo(this.mainMap);
+                }
+
+                this.mainMap.eachLayer((layer) => { if (layer instanceof L.Marker) this.mainMap.removeLayer(layer); });
+
+                let mapData = DB.aset;
+                if(DB.session.role !== 'Admin') mapData = mapData.filter(d => d.kodeOpd === DB.session.kodeOpd);
+
+                const bounds = [];
+                mapData.forEach(d => {
+                    if (d.lat && d.lng) {
+                        const marker = L.marker([d.lat, d.lng]).addTo(this.mainMap);
+                        marker.bindPopup(`
+                            <div style="min-width: 220px;">
+                                <div class="fw-bold text-primary border-bottom pb-1 mb-2">${d.nama}</div>
+                                <div class="small mb-1"><b>OPD:</b> ${d.opd}</div>
+                                <div class="small mb-1"><b>Letak:</b> ${d.letak}</div>
+                                <div class="small mb-1"><b>Sertifikat:</b> ${d.status === 'sudah' ? '<span class="text-success fw-bold">Sudah</span>' : '<span class="text-danger fw-bold">Belum</span>'}</div>
+                                <div class="small mt-2 pt-2 border-top text-end fw-bold text-success">
+                                    Rp ${Number(d.harga).toLocaleString('id-ID')}
+                                </div>
+                            </div>
+                        `);
+                        bounds.push([d.lat, d.lng]);
+                    }
+                });
+                if(bounds.length > 0) this.mainMap.fitBounds(bounds, { padding: [50, 50], maxZoom: 18 });
+            },
+            focusMap(lat, lng) {
+                ui.navigate('peta');
+                setTimeout(() => {
+                    if(this.mainMap) {
+                        this.mainMap.setView([lat, lng], 18);
+                        this.mainMap.eachLayer((layer) => {
+                            if (layer instanceof L.Marker && layer.getLatLng().lat == lat) layer.openPopup();
+                        });
+                    }
+                }, 300);
+            },
+            initModalMap() {
+                if(!this.modalMap) {
+                    this.modalMap = L.map('modal-map').setView([-6.0123, 106.0123], 12);
+                    L.tileLayer('http://{s}.google.com/vt/lyrs=y,h&x={x}&y={y}&z={z}',{
+                        maxZoom: 20, subdomains:['mt0','mt1','mt2','mt3']
+                    }).addTo(this.modalMap);
+
+                    L.Control.geocoder({defaultMarkGeocode: false})
+                        .on('markgeocode', function(e) { geo.modalMap.fitBounds(e.geocode.bbox); })
+                        .addTo(this.modalMap);
+
+                    this.modalMap.on('click', function(e) {
+                        document.getElementById('kib-lat').value = e.latlng.lat.toFixed(6);
+                        document.getElementById('kib-lng').value = e.latlng.lng.toFixed(6);
+                        if(geo.modalMarker) geo.modalMap.removeLayer(geo.modalMarker);
+                        geo.modalMarker = L.marker(e.latlng).addTo(geo.modalMap);
+                    });
+                }
+                this.modalMap.invalidateSize();
+            },
+            setModalMarker(lat, lng) {
+                if(!this.modalMap) return;
+                const pos = [parseFloat(lat), parseFloat(lng)];
+                this.modalMap.setView(pos, 16);
+                if(this.modalMarker) this.modalMap.removeLayer(this.modalMarker);
+                this.modalMarker = L.marker(pos).addTo(this.modalMap);
+            }
+        };
+
+        // ==========================================
+        // 5. DATA KIB A LOGIC
+        // ==========================================
+        const kib = {
+            autoFillKodeOPD() {
+                const sel = document.getElementById('kib-opd');
+                const opt = sel.options[sel.selectedIndex];
+                document.getElementById('kib-kodeopd').value = opt.getAttribute('data-kode') || '';
+            },
+            render() {
+                const search = document.getElementById('filter-search').value.toLowerCase();
+                const filterOpd = document.getElementById('filter-opd').value;
+                const filterStatus = document.getElementById('filter-status').value;
+                const tbody = document.getElementById('table-kib-body');
+                
+                let dataToRender = DB.aset;
+                const p = DB.session.perms || DEFAULT_PERMS;
+                const isAdmin = DB.session.role === 'Admin';
+
+                if (!isAdmin) dataToRender = dataToRender.filter(d => d.kodeOpd === DB.session.kodeOpd);
+
+                dataToRender = dataToRender.filter(d => 
+                    (filterOpd === '' || d.opd === filterOpd) &&
+                    (filterStatus === '' || d.status === filterStatus) &&
+                    (
+                        (d.nama || '').toLowerCase().includes(search) || 
+                        (d.letak || '').toLowerCase().includes(search) ||
+                        (d.register || '').toLowerCase().includes(search)
+                    )
+                );
+
+                tbody.innerHTML = dataToRender.map((d, i) => `
+                    <tr>
+                        <td class="ps-3 text-muted small">${i + 1}</td>
+                        <td class="fw-bold text-primary">${d.kodeOpd || '-'}</td>
+                        <td class="small fw-bold text-truncate" style="max-width: 150px;" title="${d.opd}">${d.opd || '-'}</td>
+                        <td class="small"><span class="badge bg-light text-dark border">${d.register || '-'}</span></td>
+                        <td>
+                            <div class="fw-bold text-blue">${d.nama || '-'}</div>
+                            <div class="text-muted" style="font-size: 11px;">${d.namaUmum || ''}</div>
+                        </td>
+                        <td class="small text-truncate" style="max-width: 150px;" title="${d.letak}">${d.letak || '-'}</td>
+                        <td class="small">${d.kota}, ${d.kec}, ${d.kel}</td>
+                        <td class="small">
+                            <div><b>Guna:</b> ${d.penggunaan || '-'}</div>
+                            <div class="text-muted" style="font-size: 11px;"><b>Asal:</b> ${d.asal || '-'}</div>
+                        </td>
+                        <td class="text-end fw-bold">${Number(d.luas || 0).toLocaleString('id-ID')}</td>
+                        <td class="text-end fw-bold text-success">${Number(d.harga || 0).toLocaleString('id-ID')}</td>
+                        <td>
+                            ${d.status === 'sudah' 
+                                ? `<span class="badge bg-success w-100 py-1 mb-1"><i class="fas fa-check-circle"></i> Bersertifikat</span><br><small class="text-muted fw-bold">${d.tglSertifikat || '-'}</small>` 
+                                : `<span class="badge bg-danger w-100 py-1"><i class="fas fa-times-circle"></i> Belum</span>`
+                            }
+                        </td>
+                        <td class="text-center">
+                            ${d.scan ? `
+                                <div class="btn-group btn-group-sm">
+                                    <button class="btn btn-outline-info" onclick="kib.lihatScan('${d.id}')" title="Lihat"><i class="fas fa-eye"></i></button>
+                                    <button class="btn btn-outline-success" onclick="kib.unduhScan('${d.id}')" title="Unduh"><i class="fas fa-download"></i></button>
+                                    <button class="btn btn-outline-secondary" onclick="kib.cetakScan('${d.id}')" title="Cetak"><i class="fas fa-print"></i></button>
+                                </div>
+                            ` : `<span class="small text-muted fst-italic">-Tidak ada-</span>`}
+                        </td>
+                        <td class="text-center pe-3">
+                            ${(d.lat && d.lng) ? `<button class="btn btn-sm btn-light text-info me-1 border" onclick="geo.focusMap(${d.lat}, ${d.lng})" title="Lihat Peta"><i class="fas fa-map-marker-alt"></i></button>` : ''}
+                            ${(isAdmin || p.edit) ? `<button class="btn btn-sm btn-light text-primary me-1 border" onclick="ui.modalKib('edit', '${d.id}')" title="Edit"><i class="fas fa-edit"></i></button>` : ''}
+                            ${(isAdmin || p.hapus) ? `<button class="btn btn-sm btn-light text-danger border" onclick="kib.delete('${d.id}')" title="Hapus"><i class="fas fa-trash"></i></button>` : ''}
+                        </td>
+                    </tr>
+                `).join('');
+
+                if(dataToRender.length === 0) tbody.innerHTML = `<tr><td colspan="13" class="text-center text-muted py-5"><i class="fas fa-folder-open mb-2 text-secondary fs-3"></i><br>Data tidak ditemukan.</td></tr>`;
+            },
+            updateFilterOPD() {
+                if(DB.session.role !== 'Admin') {
+                    document.getElementById('filter-opd').style.display = 'none';
+                    return;
+                }
+                const sel = document.getElementById('filter-opd');
+                const curr = sel.value;
+                sel.innerHTML = '<option value="">Semua OPD</option>' + DB.refOpd.map(o => `<option value="${o.nama}">${o.nama}</option>`).join('');
+                sel.value = curr;
+            },
+            save(e) {
+                e.preventDefault();
+                const fileInput = document.getElementById('kib-scan');
+                const file = fileInput.files[0];
+
+                if(file && file.size > 1.5 * 1024 * 1024) {
+                    return Swal.fire('Gagal', 'Ukuran file terlalu besar. Maksimal 1.5MB.', 'error');
+                }
+
+                // Jika ada file baru, baca dulu ke base64
+                if(file) {
+                    const reader = new FileReader();
+                    reader.onload = (evt) => {
+                        this.executeSave(evt.target.result);
+                    };
+                    reader.readAsDataURL(file);
+                } else {
+                    // Gunakan data lama jika tidak ada upload baru
+                    this.executeSave(document.getElementById('kib-scan-data').value);
+                }
+            },
+            executeSave(scanBase64) {
+                const id = document.getElementById('kib-id').value;
+                const data = {
+                    id: id || 'KIB' + Date.now(),
+                    kodeOpd: document.getElementById('kib-kodeopd').value,
+                    opd: document.getElementById('kib-opd').value,
+                    register: document.getElementById('kib-register').value,
+                    namaUmum: document.getElementById('kib-namaumum').value,
+                    nama: document.getElementById('kib-namaspesifik').value,
+                    letak: document.getElementById('kib-letak').value,
+                    kota: document.getElementById('kib-kota').value,
+                    kec: document.getElementById('kib-kec').value,
+                    kel: document.getElementById('kib-kel').value,
+                    lat: document.getElementById('kib-lat').value,
+                    lng: document.getElementById('kib-lng').value,
+                    penggunaan: document.getElementById('kib-penggunaan').value,
+                    asal: document.getElementById('kib-asal').value,
+                    luas: parseFloat(document.getElementById('kib-luas').value) || 0,
+                    tahun: document.getElementById('kib-tahun').value,
+                    harga: parseFloat(document.getElementById('kib-harga').value) || 0,
+                    status: document.getElementById('kib-status').value,
+                    tglSertifikat: document.getElementById('kib-tglsertifikat').value,
+                    no: document.getElementById('kib-nosertifikat').value,
+                    scan: scanBase64 || null
+                };
+
+                if (id) DB.aset = DB.aset.map(x => x.id === id ? data : x);
+                else DB.aset.push(data);
+
+                saveDB();
+                bootstrap.Modal.getInstance(document.getElementById('modal-kib')).hide();
+                Swal.fire('Berhasil', 'Data KIB A dan Dokumen disimpan!', 'success');
+                this.render();
+                if(document.getElementById('view-dashboard').classList.contains('active')) logic.renderDashboard();
+            },
+            delete(id) {
+                Swal.fire({ title: 'Hapus Data?', text: "Semua data terkait termasuk dokumen scan akan terhapus.", icon: 'warning', showCancelButton: true, confirmButtonColor: '#ef4444', confirmButtonText: 'Ya, Hapus!'
+                }).then((res) => {
+                    if(res.isConfirmed) {
+                        DB.aset = DB.aset.filter(x => x.id !== id);
+                        saveDB(); this.render(); logic.renderDashboard();
+                        Swal.fire('Terhapus', 'Data telah dihapus', 'success');
+                    }
+                });
+            },
+            // FITUR SCAN
+            lihatScan(id) {
+                const data = DB.aset.find(x => x.id === id);
+                if(!data || !data.scan) return;
+                
+                const modal = new bootstrap.Modal(document.getElementById('modal-scan'));
+                const img = document.getElementById('preview-scan-img');
+                const pdf = document.getElementById('preview-scan-pdf');
+                
+                img.style.display = 'none'; pdf.style.display = 'none';
+                
+                if(data.scan.startsWith('data:application/pdf')) {
+                    pdf.src = data.scan; pdf.style.display = 'block';
+                } else {
+                    img.src = data.scan; img.style.display = 'block';
+                }
+                modal.show();
+            },
+            unduhScan(id) {
+                const data = DB.aset.find(x => x.id === id);
+                if(!data || !data.scan) return;
+                
+                const a = document.createElement("a");
+                a.href = data.scan;
+                const ext = data.scan.startsWith('data:application/pdf') ? 'pdf' : 'png';
+                a.download = `Scan_Dokumen_${data.nama.replace(/\s/g, '_')}.${ext}`;
+                a.click();
+            },
+            cetakScan(id) {
+                const data = DB.aset.find(x => x.id === id);
+                if(!data || !data.scan) return;
+
+                const win = window.open();
+                win.document.write('<iframe src="' + data.scan + '" frameborder="0" style="border:0; top:0px; left:0px; bottom:0px; right:0px; width:100%; height:100%;" allowfullscreen></iframe>');
+                
+                // Jika gambar, panggil fungsi print setelah load
+                if(!data.scan.startsWith('data:application/pdf')){
+                    win.document.write(`<img src="${data.scan}" style="width:100%;" onload="window.print();window.close()">`);
+                }
+            },
+            // FITUR EXCEL
+            downloadTemplate() {
+                const data = [["Kode OPD Pengguna", "OPD Pengguna", "No. Register", "Nama Umum", "Nama Spesifik", "Letak/Lokasi", "Kota/Kabupaten", "Kecamatan", "Kelurahan", "Penggunaan Tanah", "Asal Usul Tanah", "Luas (m2)", "Tahun Perolehan", "Nilai Perolehan (Rp)", "Status Sertifikat (sudah/belum)", "Tanggal Sertifikat", "Nomor Sertifikat", "Latitude", "Longitude"]];
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Template_KIB_A");
+                XLSX.writeFile(wb, "Template_Import_KIBA_SISTADIG.xlsx");
+            },
+            importExcel(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    try {
+                        const wb = XLSX.read(evt.target.result, { type: 'binary' });
+                        const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                        
+                        let count = 0;
+                        json.forEach(row => {
+                            if(row["Nama Spesifik"] && row["Kode OPD Pengguna"]) {
+                                DB.aset.push({
+                                    id: 'KIB' + Date.now() + Math.random(),
+                                    kodeOpd: row["Kode OPD Pengguna"],
+                                    opd: row["OPD Pengguna"] || '',
+                                    register: row["No. Register"] || '',
+                                    namaUmum: row["Nama Umum"] || '',
+                                    nama: row["Nama Spesifik"],
+                                    letak: row["Letak/Lokasi"] || '',
+                                    kota: row["Kota/Kabupaten"] || '',
+                                    kec: row["Kecamatan"] || '',
+                                    kel: row["Kelurahan"] || '',
+                                    penggunaan: row["Penggunaan Tanah"] || '',
+                                    asal: row["Asal Usul Tanah"] || '',
+                                    luas: parseFloat(row["Luas (m2)"]) || 0,
+                                    tahun: row["Tahun Perolehan"] || '',
+                                    harga: parseFloat(row["Nilai Perolehan (Rp)"]) || 0,
+                                    status: (row["Status Sertifikat (sudah/belum)"] || '').toLowerCase() === 'sudah' ? 'sudah' : 'belum',
+                                    tglSertifikat: row["Tanggal Sertifikat"] || '',
+                                    no: row["Nomor Sertifikat"] || '',
+                                    lat: row["Latitude"] || '',
+                                    lng: row["Longitude"] || '',
+                                    scan: null
+                                });
+                                count++;
+                            }
+                        });
+                        saveDB(); kib.render(); logic.renderDashboard();
+                        e.target.value = ""; 
+                        Swal.fire('Berhasil', `Berhasil mengimpor ${count} Daftar Barang Tanah`, 'success');
+                    } catch(err) {
+                        Swal.fire('Error', 'Format file tidak valid!', 'error');
+                    }
+                };
+                reader.readAsBinaryString(file);
+            },
+            exportExcel() {
+                let exportData = DB.aset;
+                if(DB.session.role !== 'Admin') exportData = exportData.filter(d => d.kodeOpd === DB.session.kodeOpd);
+                if(exportData.length === 0) return Swal.fire('Kosong', 'Tidak ada data', 'info');
+
+                const mapped = exportData.map((d, i) => ({
+                    "No": i + 1,
+                    "Kode OPD Pengguna": d.kodeOpd,
+                    "OPD Pengguna": d.opd,
+                    "No. Register": d.register,
+                    "Nama Barang Spesifik": d.nama,
+                    "Letak/Lokasi": d.letak,
+                    "Kota/Kabupaten": d.kota,
+                    "Kecamatan": d.kec,
+                    "Kelurahan": d.kel,
+                    "Penggunaan Tanah": d.penggunaan,
+                    "Asal Usul Tanah": d.asal,
+                    "Luas (m2)": d.luas,
+                    "Nilai Perolehan (Rp)": d.harga,
+                    "Status Sertifikat": d.status === 'sudah' ? 'Bersertifikat' : 'Belum Bersertifikat',
+                    "Tanggal Sertifikat": d.tglSertifikat,
+                    "Nomor Sertifikat": d.no,
+                    "Tahun Perolehan": d.tahun,
+                    "Titik Koordinat": `${d.lat || ''}, ${d.lng || ''}`
+                }));
+
+                const ws = XLSX.utils.json_to_sheet(mapped);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Data_Tanah_KIB_A");
+                XLSX.writeFile(wb, "Data_KIB_A_SISTADIG.xlsx");
+            }
+        };
+
+        // ==========================================
+        // 6. DASHBOARD LOGIC
+        // ==========================================
+        const logic = {
+            renderDashboard() {
+                let asetData = DB.aset;
+                if(DB.session.role !== 'Admin') asetData = asetData.filter(d => d.kodeOpd === DB.session.kodeOpd);
+
+                let stat = { total:0, sudah:0, belum:0, luasSudah:0, luasBelum:0, nilaiSudah:0, nilaiBelum:0 };
+                
+                asetData.forEach(d => {
+                    stat.total++;
+                    if(d.status === 'sudah') {
+                        stat.sudah++; stat.luasSudah += (d.luas||0); stat.nilaiSudah += (d.harga||0);
+                    } else {
+                        stat.belum++; stat.luasBelum += (d.luas||0); stat.nilaiBelum += (d.harga||0);
+                    }
+                });
+
+                document.getElementById('dash-total-bidang').innerText = stat.total.toLocaleString('id-ID');
+                document.getElementById('dash-bidang-sudah').innerText = stat.sudah.toLocaleString('id-ID');
+                document.getElementById('dash-bidang-belum').innerText = stat.belum.toLocaleString('id-ID');
+                document.getElementById('dash-total-luas').innerText = (stat.luasSudah + stat.luasBelum).toLocaleString('id-ID');
+                document.getElementById('dash-luas-sudah').innerText = stat.luasSudah.toLocaleString('id-ID');
+                document.getElementById('dash-luas-belum').innerText = stat.luasBelum.toLocaleString('id-ID');
+                document.getElementById('dash-total-nilai').innerText = 'Rp ' + (stat.nilaiSudah + stat.nilaiBelum).toLocaleString('id-ID');
+                document.getElementById('dash-nilai-sudah').innerText = 'Rp ' + stat.nilaiSudah.toLocaleString('id-ID');
+
+                const opdStats = {};
+                asetData.forEach(d => {
+                    const k = d.kodeOpd + "||" + d.opd;
+                    if (!opdStats[k]) opdStats[k] = { tot:0, sudah:0, belum:0, val:0 };
+                    opdStats[k].tot++;
+                    opdStats[k].val += (d.harga || 0);
+                    if(d.status==='sudah') opdStats[k].sudah++; else opdStats[k].belum++;
+                });
+
+                const tbody = document.getElementById('dash-table-opd');
+                tbody.innerHTML = Object.entries(opdStats).map(([key, s]) => {
+                    const [kode, nama] = key.split('||');
+                    return `
+                        <tr>
+                            <td class="fw-bold text-primary">${kode || '-'}</td>
+                            <td class="small fw-bold">${nama || '-'}</td>
+                            <td class="text-center fw-bold">${s.tot}</td>
+                            <td class="text-center text-success">${s.sudah}</td>
+                            <td class="text-center text-danger">${s.belum}</td>
+                            <td class="text-end fw-bold">Rp ${s.val.toLocaleString('id-ID')}</td>
+                        </tr>
+                    `;
+                }).join('');
+                if(Object.keys(opdStats).length === 0) tbody.innerHTML = `<tr><td colspan="6" class="text-center py-3 text-muted">Belum ada data</td></tr>`;
+            }
+        };
+
+        // ==========================================
+        // 7. MANAJEMEN AKUN
+        // ==========================================
+        const akun = {
+            toggleForm(role) {
+                document.querySelectorAll('.opd-field').forEach(el => {
+                    el.style.display = role === 'OPD Pengguna' ? 'block' : 'none';
+                });
+            },
+            autoFillOpd(sel) {
+                const opt = sel.options[sel.selectedIndex];
+                document.getElementById('akun-kodeopd').value = sel.value;
+                document.getElementById('akun-namaopd').value = opt.getAttribute('data-nama') || '';
+            },
+            render() {
+                const tbody = document.getElementById('table-akun-body');
+                tbody.innerHTML = DB.akun.map(a => {
+                    let permsHtml = '-';
+                    if(a.role === 'OPD Pengguna' && a.perms) {
+                        permsHtml = `
+                            ${a.perms.tambah ? '<span class="badge bg-primary me-1">Tambah</span>' : ''}
+                            ${a.perms.edit ? '<span class="badge bg-warning text-dark me-1">Edit</span>' : ''}
+                            ${a.perms.hapus ? '<span class="badge bg-danger me-1">Hapus</span>' : ''}
+                            ${a.perms.cetak ? '<span class="badge bg-info text-dark me-1">Cetak</span>' : ''}
+                            ${a.perms.import ? '<span class="badge bg-dark">Import</span>' : ''}
+                        `;
+                    }
+                    return `
+                    <tr>
+                        <td class="ps-3 fw-bold">${a.user}</td>
+                        <td><span class="badge ${a.role === 'Admin' ? 'bg-danger' : 'bg-success'}">${a.role}</span></td>
+                        <td class="fw-bold">${a.kodeOpd || '-'}</td>
+                        <td class="small">${a.namaOpd || '-'}</td>
+                        <td>${permsHtml}</td>
+                        <td class="text-center pe-3">
+                            <button class="btn btn-sm btn-light text-primary border" onclick="ui.modalAkun('edit', ${a.id})"><i class="fas fa-edit"></i></button>
+                            ${a.id !== 1 ? `<button class="btn btn-sm btn-light text-danger border" onclick="akun.delete(${a.id})"><i class="fas fa-trash"></i></button>` : ''}
+                        </td>
+                    </tr>
+                `}).join('');
+            },
+            save(e) {
+                e.preventDefault();
+                const id = document.getElementById('akun-id').value;
+                const role = document.getElementById('akun-role').value;
+                const data = {
+                    id: id ? parseInt(id) : Date.now(),
+                    role: role,
+                    kodeOpd: role === 'Admin' ? '' : document.getElementById('akun-kodeopd').value,
+                    namaOpd: role === 'Admin' ? '' : document.getElementById('akun-namaopd').value,
+                    user: document.getElementById('akun-username').value,
+                    pass: document.getElementById('akun-password').value,
+                    perms: role === 'Admin' ? DEFAULT_PERMS : {
+                        lihat: true, 
+                        tambah: document.getElementById('perm-tambah').checked,
+                        edit: document.getElementById('perm-edit').checked,
+                        hapus: document.getElementById('perm-hapus').checked,
+                        cetak: document.getElementById('perm-cetak').checked,
+                        import: document.getElementById('perm-import').checked
+                    }
+                };
+
+                if (id) DB.akun = DB.akun.map(x => x.id == id ? data : x);
+                else {
+                    if(DB.akun.find(a => a.user === data.user)) return Swal.fire('Error', 'Username sudah digunakan!', 'error');
+                    DB.akun.push(data);
+                }
+
+                saveDB();
+                bootstrap.Modal.getInstance(document.getElementById('modal-akun')).hide();
+                Swal.fire('Berhasil', 'Data Akun disimpan', 'success');
+                this.render();
+            },
+            delete(id) {
+                if(id === 1) return Swal.fire('Ditolak', 'Akun Master Admin tidak dapat dihapus', 'error');
+                Swal.fire({title: 'Hapus Akun?', icon: 'warning', showCancelButton:true, confirmButtonColor: '#ef4444'}).then(res => {
+                    if(res.isConfirmed) { DB.akun = DB.akun.filter(a => a.id !== id); saveDB(); this.render(); }
+                });
+            }
+        };
+
+        // ==========================================
+        // 8. MASTER DATA IMPORT LOGIC
+        // ==========================================
+        const master = {
+            downloadTemplateOPD() {
+                const data = [["Kode OPD Pengguna", "OPD Pengguna"]];
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Daftar OPD");
+                XLSX.writeFile(wb, "Template_Import_OPD.xlsx");
+            },
+            downloadTemplateWilayah() {
+                const data = [["Kota/Kabupaten", "Kecamatan", "Kelurahan/Desa"]];
+                const ws = XLSX.utils.aoa_to_sheet(data);
+                const wb = XLSX.utils.book_new();
+                XLSX.utils.book_append_sheet(wb, ws, "Wilayah");
+                XLSX.writeFile(wb, "Template_Import_Wilayah.xlsx");
+            },
+            importOPD(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const wb = XLSX.read(evt.target.result, { type: 'binary' });
+                    const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                    let count = 0; DB.refOpd = []; 
+                    json.forEach(row => {
+                        if(row["Kode OPD Pengguna"] && row["OPD Pengguna"]) {
+                            DB.refOpd.push({ kode: row["Kode OPD Pengguna"], nama: row["OPD Pengguna"] }); count++;
+                        }
+                    });
+                    saveDB(); e.target.value = ""; 
+                    Swal.fire('Selesai', `Berhasil mengimpor ${count} Referensi OPD`, 'success');
+                };
+                reader.readAsBinaryString(file);
+            },
+            importWilayah(e) {
+                const file = e.target.files[0];
+                if (!file) return;
+                const reader = new FileReader();
+                reader.onload = (evt) => {
+                    const wb = XLSX.read(evt.target.result, { type: 'binary' });
+                    const json = XLSX.utils.sheet_to_json(wb.Sheets[wb.SheetNames[0]]);
+                    let newWilayah = {}; let count = 0;
+                    json.forEach(row => {
+                        const kota = row["Kota/Kabupaten"]; const kec = row["Kecamatan"]; const kel = row["Kelurahan/Desa"];
+                        if(kota && kec && kel) {
+                            if(!newWilayah[kota]) newWilayah[kota] = {};
+                            if(!newWilayah[kota][kec]) newWilayah[kota][kec] = [];
+                            if(!newWilayah[kota][kec].includes(kel)) { newWilayah[kota][kec].push(kel); count++; }
+                        }
+                    });
+                    DB.refWilayah = newWilayah;
+                    saveDB(); e.target.value = ""; geo.initFilters();
+                    Swal.fire('Selesai', `Berhasil membangun struktur ${count} Kelurahan/Desa`, 'success');
+                };
+                reader.readAsBinaryString(file);
+            }
+        };
+
+        document.getElementById('form-login').addEventListener('submit', (e) => app.login(e));
+        document.getElementById('form-kib').addEventListener('submit', (e) => kib.save(e));
+        document.getElementById('form-akun').addEventListener('submit', (e) => akun.save(e));
+        window.onload = () => app.init();
+    </script>
 </body>
 </html>
